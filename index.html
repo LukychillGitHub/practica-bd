@@ -114,6 +114,23 @@ pre.sol .kw{color:var(--kw);font-weight:600}
 .list div{display:flex;gap:10px;font-size:14.5px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
 .list .m{font-weight:700;flex:none}
 .list .p .m{color:var(--ok)}.list .f .m{color:var(--bad)}
+/* teoría */
+.ttabs{position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:4;background:var(--bg);display:flex;gap:6px;overflow-x:auto;padding-block:4px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.ttabs::-webkit-scrollbar{display:none}
+.ttabs button{flex:none;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:600}
+.ttabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.teo{min-width:0}
+.teo .th{font-size:17px;font-weight:700;margin:22px 0 8px}
+.teo .tp{margin:0 0 10px;max-width:65ch}
+.teo .tl{margin:0 0 12px;padding-left:22px;display:grid;gap:5px}
+.teo code{background:var(--code-bg);padding:1px 5px;border-radius:5px;font-size:.85em}
+.teo pre.sol{margin:8px 0 14px}
+.tw{overflow-x:auto;margin:6px 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.tw table{border-collapse:collapse;width:100%;font-size:14px}
+.tw th,.tw td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tw thead th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--code-bg)}
+.tw tbody th{font-weight:600}
+.tw tr:last-child th,.tw tr:last-child td{border-bottom:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -290,6 +307,165 @@ const failed=()=>Object.keys(S.stats).filter(k=>byId[k]&&!S.stats[k].last);
 
 function hl(code){return esc(code).replace(/\b(SELECT|FROM|WHERE|INNER JOIN|JOIN|ON|AS|CREATE|OR REPLACE|VIEW|TABLE|TRIGGER|PROCEDURE|BEFORE|AFTER|INSERT|UPDATE|DELETE|INTO|VALUES|FOR EACH ROW|BEGIN|END IF|END CASE|END WHILE|END|IF|ELSEIF|ELSE|THEN|SIGNAL|SQLSTATE|SET|MESSAGE_TEXT|DECLARE|DEFAULT|IN|OUT|INOUT|CASE|WHEN|WHILE|DO|CALL|GRANT|REVOKE|TO|ROLE|USER|IDENTIFIED BY|SHOW|GRANTS|INDEX|EXPLAIN|ALTER|ADD|DELIMITER|START TRANSACTION|COMMIT|ROLLBACK|EXIT HANDLER|SQLEXCEPTION|GROUP BY|ORDER BY|DESC|NOT|LIKE|AND|IF NOT EXISTS|PRIMARY KEY|AUTO_INCREMENT)\b/g,'<span class="kw">$1</span>')}
 
+/* ---------- Teoría ---------- */
+// bloques: ["h",txt] ["p",html] ["ul",[html]] ["ol",[html]] ["code",sql] ["t",[[enc...],[fila]...]]
+const TEORIA={
+seg:[
+["p","La seguridad protege los datos frente a accesos malintencionados: <b>lectura</b> no autorizada (robo), <b>modificación</b> no autorizada y <b>destrucción</b> no autorizada. La integridad, en cambio, evita inconsistencias accidentales."],
+["p","<b>Principio de menor privilegio:</b> cada usuario o aplicación tiene solo los derechos mínimos para su función. Si la app se conecta como root y la vulneran, el atacante puede todo; con un usuario limitado, el daño queda acotado."],
+["h","Autorizaciones sobre los datos"],
+["t",[["Privilegio","Permite","No permite"],["SELECT","Leer","Modificar"],["INSERT","Agregar filas","Modificar existentes"],["UPDATE","Modificar","Borrar"],["DELETE","Borrar filas","—"]]],
+["h","Autorizaciones sobre el esquema"],
+["t",[["Autorización","Permite"],["Índices","Crear y borrar índices"],["Recursos","Crear relaciones (tablas) nuevas"],["Alteración","Agregar o borrar atributos"],["Eliminación","Borrar relaciones"]]],
+["h","DAC: Control de Acceso Discrecional"],
+["p","El propietario o administrador del objeto concede o revoca permisos a su criterio. <b>GRANT usa TO</b>; <b>REVOKE usa FROM</b>."],
+["code","GRANT SELECT ON sucursal TO U1, U2, U3;\nGRANT ALL PRIVILEGES ON sucursal TO public;  -- public = todos, presentes y futuros\nREVOKE SELECT ON sucursal FROM U1, U2, U3;\nREVOKE UPDATE (importe) ON prestamo FROM U1, U2, U3;  -- sobre una columna"],
+["h","RBAC: Control de Acceso Basado en Roles"],
+["p","Un rol agrupa los privilegios de una función (rol_ventas, rol_auditor). Los permisos se dan al rol y los usuarios son miembros."],
+["ul",["<b>Administración simple:</b> si alguien cambia de área, se le cambia el rol.","<b>Menor privilegio:</b> es fácil auditar qué puede hacer un rol.","<b>Jerarquía:</b> un rol puede heredar de otro (rol_gerente hereda de rol_empleado)."]],
+["code","CREATE ROLE IF NOT EXISTS 'rol_analista_datos';\nGRANT SELECT, INSERT ON mi_base.ventas TO 'rol_analista_datos';\nCREATE USER IF NOT EXISTS 'juan_perez'@'localhost' IDENTIFIED BY 'ClaveSegura2026!';\nGRANT 'rol_analista_datos' TO 'juan_perez'@'localhost';\nSET DEFAULT ROLE 'rol_analista_datos' TO 'juan_perez'@'localhost';\nSHOW GRANTS FOR 'rol_analista_datos';\nSHOW GRANTS FOR 'juan_perez'@'localhost';"],
+["h","Seguridad con vistas"],
+["p","GRANT SELECT sobre una tabla da acceso a toda la tabla. Para restringir se crea una vista y se da permiso sobre la vista."],
+["ul",["<b>Vertical:</b> la vista muestra solo columnas no sensibles (oculta sueldos, hashes, documentos).","<b>Horizontal:</b> la vista filtra filas con WHERE (el gerente ve solo su departamento)."]],
+["code","REVOKE SELECT ON mi_base.empleados FROM 'rol_analista_datos';\nGRANT SELECT ON mi_base.vista_empleados_publica TO 'rol_analista_datos';"]
+],
+vis:[
+["p","Una vista es una <b>relación virtual</b>: no guarda datos, guarda solo la consulta SQL. Cada vez que se la consulta, el motor ejecuta esa consulta al vuelo. Es el nivel externo de la arquitectura ANSI/SPARC."],
+["h","Ventajas"],
+["ul",["<b>Seguridad y privacidad:</b> solo las columnas o filas permitidas.","<b>Simplificación:</b> encapsula JOINs y agregaciones detrás de algo que se consulta como tabla.","<b>Independencia lógica:</b> si cambian las tablas base, se ajusta la vista y la app sigue igual.","<b>Personalización:</b> distintas caras del mismo modelo para Ventas, RRHH o Finanzas."]],
+["h","Creación"],
+["code","CREATE VIEW v_catalogo_accion AS\nSELECT f.film_id, f.title, f.description, f.release_year, f.rating\nFROM film f\nINNER JOIN film_category fc ON f.film_id = fc.film_id\nINNER JOIN category c ON fc.category_id = c.category_id\nWHERE c.name = 'Action';"],
+["h","Restricciones"],
+["ul",["<b>Alias obligatorio</b> en columnas calculadas (<code>rental_rate * 1.21 AS tarifa_final</code>) o con nombre repetido.","<b>Dependencia:</b> no se crea sobre objetos inexistentes; si se borra la tabla base, la vista queda inválida.","<b>ORDER BY:</b> el estándar no lo permite en la vista; MySQL lo acepta en algunos casos."]],
+["h","Modificación y eliminación"],
+["t",[["Sentencia","Qué hace","Permisos"],["CREATE OR REPLACE VIEW","Cambia la consulta","Se conservan"],["DROP + CREATE","Borra y recrea","Se pierden"],["DROP VIEW","Borra la definición","—"]]],
+["p","<code>DROP VIEW</code> <b>no borra</b> datos de la tabla: la vista nunca tuvo datos propios."]
+],
+idx:[
+["p","Un índice es como el índice de un libro: el motor lo consulta para saber en qué bloque de disco está el registro, en vez de leer toda la tabla. La <b>clave de búsqueda</b> es el atributo por el que se busca."],
+["p","Dos familias: <b>ordenados</b> (B-Tree, en orden) y <b>asociativos</b> (hash, repartidos en cajones por una función)."],
+["h","Ordenados: denso vs disperso"],
+["p","Los registros están en el orden de la clave. Cada entrada tiene valor + puntero (bloque + desplazamiento). El motor actualiza el índice en cada INSERT, UPDATE o DELETE."],
+["t",[["","Denso","Disperso"],["Entradas","Una por cada valor","Solo algunos valores"],["Búsqueda","Directa","Mayor valor ≤ buscado y recorre"],["Velocidad","Más rápido","Más lento"],["Espacio y mantenimiento","Mayor","Menor"]]],
+["p","Para <code>WHERE id = 1324</code> en 10 millones de filas conviene el denso."],
+["h","Multinivel"],
+["p","Índice sobre el índice. <b>Interno</b> = primario sobre los datos. <b>Externo</b> = <b>disperso</b> sobre el interno."],
+["ol",["Busca en el índice externo (en RAM).","Obtiene el bloque del índice interno.","Lee ese bloque y encuentra la entrada.","Sigue el puntero al bloque de datos."]],
+["h","Secundarios"],
+["p","<b>Un solo primario por tabla</b> (los datos se ordenan físicamente de una forma) y <b>muchos secundarios</b>. El secundario devuelve la PK y el primario entrega la fila."],
+["ul",["<code>customer_id = 14</code> → primario, 1 búsqueda.","<code>last_name = 'GUINNESS'</code> → secundario → customer_id → primario → fila.","Campo sin índice → <b>Full Table Scan</b>: lee todos los bloques."]],
+["h","EXPLAIN en Sakila"],
+["t",[["Consulta","type","key"],["customer_id = 5","const","PRIMARY (rows = 1)"],["last_name = 'MONROE'","ref","idx_last_name"],["film length = 120","ALL","NULL (rows = 1000)"]]],
+["code","SHOW INDEX FROM customer;\nSHOW CREATE TABLE customer;\n\nCREATE INDEX idx_film_length ON film (length);\n-- o: ALTER TABLE film ADD INDEX idx_film_length (length);\nEXPLAIN SELECT * FROM film WHERE length = 120;  -- ahora type = ref"],
+["h","Asociativos (hash)"],
+["p","Sin orden ni comparaciones: <b>dirección del bucket = h(K)</b>. Un cajón guarda uno o más registros. La función ideal tiene distribución <b>uniforme</b> (mismas claves posibles por cajón) y <b>aleatoria</b> (misma cantidad de registros reales por cajón)."],
+["p","<b>Desbordamiento:</b> un cajón se llena por pocos cajones en total o por sesgo (claves repetidas, mala función hash). Se resuelve con <b>cadenas de desbordamiento</b>: cajones auxiliares enlazados por punteros. Con 3 auxiliares, hasta 4 lecturas de disco."],
+["p","El DBA elige el tipo (B-Tree o Hash) y puede usar particionamiento hash; depende del motor y del storage engine."],
+["h","Resumen"],
+["t",[["Criterio","Ordenados","Hash"],["Búsqueda exacta (=)","Rápida","Ultra rápida"],["Rango (>, BETWEEN)","Excelente","No sirve"],["Estructura","Árboles B+","Cajones + h(K)"],["Riesgo","Desbalanceo","Desbordamiento"]]]
+],
+sp:[
+["p","Un Stored Procedure es un conjunto de instrucciones SQL guardado en el servidor con un nombre. Se invoca con <code>CALL</code>, recibe parámetros y puede devolver resultados."],
+["ul",["Encapsular lógica de negocio en la base.","Ejecutar varias operaciones como unidad atómica (ACID).","Automatizar procesos repetitivos: mantenimiento, lotes, reportes."]],
+["p","El SP se ejecuta cuando alguien lo llama. El trigger se dispara solo ante un evento."],
+["h","Estructura"],
+["ul",["<code>DELIMITER //</code> para que los <code>;</code> del cuerpo no corten el CREATE; al final <code>DELIMITER ;</code>.","<code>BEGIN … END</code> delimita el cuerpo.","<code>DECLARE</code> al <b>principio</b> del bloque (variables, cursores, handlers).","<code>SET</code> asigna; <code>SELECT … INTO var</code> carga un resultado."]],
+["h","Parámetros"],
+["t",[["Tipo","Uso"],["IN","Entra, solo lectura"],["OUT","El SP lo llena y lo devuelve"],["INOUT","Entra, se modifica y sale"]]],
+["h","Control de flujo"],
+["t",[["Estructura","Cuándo"],["IF / ELSEIF / ELSE","Condiciones o rangos"],["CASE","Opciones fijas (G, PG, R)"],["WHILE","Iterar mientras se cumpla algo"]]],
+["code","CASE p_rating\n  WHEN 'G'  THEN SET v_descuento = 0.20;\n  WHEN 'PG' THEN SET v_descuento = 0.10;\n  ELSE SET v_descuento = 0.00;\nEND CASE;\n\nDECLARE v_contador INT DEFAULT 1;\nWHILE v_contador <= 5 DO\n  SET v_contador = v_contador + 1;\nEND WHILE;"],
+["h","Ejemplo completo"],
+["code","DELIMITER //\nCREATE PROCEDURE sp_evaluar_fidelidad_cliente(\n  IN  p_customer_id SMALLINT,\n  OUT p_categoria   VARCHAR(20),\n  OUT p_descuento   DECIMAL(4,2)\n)\nBEGIN\n  DECLARE v_total INT DEFAULT 0;\n  SELECT COUNT(*) INTO v_total\n  FROM rental WHERE customer_id = p_customer_id;\n\n  IF v_total > 30 THEN\n    SET p_categoria = 'VIP';       SET p_descuento = 0.20;\n  ELSEIF v_total >= 15 THEN\n    SET p_categoria = 'FRECUENTE'; SET p_descuento = 0.10;\n  ELSE\n    SET p_categoria = 'REGULAR';   SET p_descuento = 0.00;\n  END IF;\nEND //\nDELIMITER ;\n\nCALL sp_evaluar_fidelidad_cliente(1, @categoria, @descuento);\nSELECT @categoria, @descuento;"],
+["p","Con parámetros OUT no se ve una tabla: el valor queda en variables de sesión con <code>@</code>."],
+["h","Modificación"],
+["p","<code>ALTER PROCEDURE</code> solo cambia metadatos (comentarios, seguridad), <b>no</b> el cuerpo ni los parámetros. Para cambiar la lógica:"],
+["code","DROP PROCEDURE IF EXISTS sp_evaluar_fidelidad_cliente;\nDELIMITER //\nCREATE PROCEDURE sp_evaluar_fidelidad_cliente(...)\nBEGIN\n  -- nueva lógica\nEND //\nDELIMITER ;"]
+],
+trg:[
+["p","Un trigger es código SQL que el motor ejecuta <b>automáticamente</b> ante un evento en una tabla. Puede interceptar una operación, cancelarla y lanzar un error."],
+["p","<b>Usos:</b> auditoría, validaciones y reglas de negocio, limpieza automática de datos, datos derivados y contadores, forzar borrado lógico."],
+["h","Los 4 pilares"],
+["ol",["<b>Tabla asociada:</b> una sola.","<b>Evento:</b> INSERT, UPDATE o DELETE.","<b>Momento:</b> BEFORE o AFTER.","<b>Nivel de fila:</b> <code>FOR EACH ROW</code>."]],
+["t",[["Momento","Se ejecuta","Ideal para"],["BEFORE","Antes del cambio","Validar o transformar"],["AFTER","Después del cambio","Auditoría, historial"]]],
+["h","Errores con SIGNAL"],
+["ul",["<code>SIGNAL</code> dispara la excepción.","<code>SQLSTATE</code>: código ANSI de 5 caracteres; los 2 primeros indican la categoría.","<code>'45000'</code>: excepción definida por el usuario."]],
+["h","OLD y NEW"],
+["t",[["Evento","OLD","NEW"],["INSERT","NULL","Datos ingresados"],["UPDATE","Datos originales","Datos nuevos"],["DELETE","Fila eliminada","NULL"]]],
+["h","Plantilla de validación"],
+["code","DELIMITER //\nCREATE TRIGGER trg_payment_monto_positivo\nBEFORE INSERT ON payment\nFOR EACH ROW\nBEGIN\n  IF NEW.amount <= 0 THEN\n    SIGNAL SQLSTATE '45000'\n      SET MESSAGE_TEXT = 'El monto debe ser mayor a 0';\n  END IF;\nEND //\nDELIMITER ;"],
+["ul",["Email: <code>IF NEW.email NOT LIKE '%@%'</code>","Fechas rental: <code>IF NEW.return_date &lt; NEW.rental_date</code>","Usuario staff: <code>IF CHAR_LENGTH(NEW.username) &lt; 4</code>"]],
+["h","Plantilla de auditoría"],
+["code","CREATE TABLE historial_tarifa (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  film_id SMALLINT UNSIGNED,\n  tarifa_anterior DECIMAL(4,2),\n  tarifa_nueva DECIMAL(4,2),\n  diferencia DECIMAL(5,2),\n  fecha_cambio DATETIME\n);\n\nDELIMITER //\nCREATE TRIGGER trg_film_tarifa_audit\nAFTER UPDATE ON film\nFOR EACH ROW\nBEGIN\n  IF OLD.rental_rate <> NEW.rental_rate THEN\n    INSERT INTO historial_tarifa\n      (film_id, tarifa_anterior, tarifa_nueva, diferencia, fecha_cambio)\n    VALUES (OLD.film_id, OLD.rental_rate, NEW.rental_rate,\n            NEW.rental_rate - OLD.rental_rate, NOW());\n  END IF;\nEND //\nDELIMITER ;"],
+["ul",["Cambio de email: AFTER UPDATE, guarda <code>OLD.email</code> y <code>NEW.email</code>.","Respaldo de rental: AFTER DELETE, inserta valores de <code>OLD</code>.","Cambio de sucursal: <code>IF OLD.store_id &lt;&gt; NEW.store_id</code>, origen OLD y destino NEW."]]
+],
+tx:[
+["p","Una transacción es un conjunto de operaciones que forman <b>una única unidad lógica de trabajo</b>. Ej.: una transferencia debita una cuenta y acredita otra, o no pasa nada."],
+["h","ACID"],
+["t",[["","Propiedad","Garantiza"],["A","Atomicidad","Todo o nada"],["C","Consistencia","De un estado válido a otro válido"],["I","Aislamiento","Las concurrentes no se interfieren"],["D","Durabilidad","Lo confirmado persiste"]]],
+["h","Estados"],
+["ul",["<b>Activa:</b> mientras se ejecuta.","<b>Parcialmente comprometida:</b> tras la última instrucción, sin confirmar.","<b>Fallida:</b> no puede continuar normalmente.","<b>Abortada:</b> rollback hecho, base como antes.","<b>Comprometida:</b> terminó con éxito."]],
+["p","Activa → Parcialmente comprometida → Comprometida, o → Fallida → Abortada. Está <b>terminada</b> si se comprometió o se abortó."],
+["h","Comandos"],
+["t",[["Comando","Qué hace"],["START TRANSACTION","Inicio; los cambios quedan temporales"],["COMMIT","Guarda en disco y los hace visibles"],["ROLLBACK","Revierte todo al estado previo al inicio"]]],
+["h","Captura de errores"],
+["ul",["<code>DECLARE … HANDLER FOR</code>: escuchador del bloque BEGIN…END.","<code>SQLEXCEPTION</code>: cualquier error SQL (FK, PK duplicada, NULL obligatorio).","<code>EXIT</code>: ejecuta el handler y corta el resto del SP."]],
+["p","El handler se declara <b>antes</b> de START TRANSACTION."],
+["code","DELIMITER //\nCREATE PROCEDURE sp_registrar_pago_con_estados(\n  IN  p_customer_id SMALLINT,\n  IN  p_staff_id    TINYINT,\n  IN  p_rental_id   INT,\n  IN  p_monto       DECIMAL(5,2),\n  OUT p_mensaje     VARCHAR(100)\n)\nBEGIN\n  DECLARE EXIT HANDLER FOR SQLEXCEPTION\n  BEGIN\n    ROLLBACK;\n    SET p_mensaje = 'Error: transaccion abortada';\n  END;\n\n  START TRANSACTION;\n    INSERT INTO payment (customer_id, staff_id, rental_id, amount, payment_date)\n    VALUES (p_customer_id, p_staff_id, p_rental_id, p_monto, NOW());\n  COMMIT;\n  SET p_mensaje = 'Pago registrado';\nEND //\nDELIMITER ;\n\nCALL sp_registrar_pago_con_estados(1, 1, 76, 2.99, @msg);     SELECT @msg;  -- comprometido\nCALL sp_registrar_pago_con_estados(99999, 1, 76, 2.99, @msg); SELECT @msg;  -- abortado"]
+],
+dw:[
+["p","Un Data Warehouse integra información de <b>múltiples fuentes</b>, bajo un <b>esquema unificado</b>, en un <b>único sitio</b>, y la guarda por mucho tiempo para análisis histórico. No es una base grande: es un sistema de procesos."],
+["h","Por qué no analizar sobre OLTP"],
+["ul",["<b>Bloqueo y rendimiento:</b> frena la operación diaria.","<b>Pérdida de historial:</b> los datos se sobrescriben.","<b>Silos:</b> datos en sistemas y formatos distintos.","<b>Complejidad:</b> demasiados JOINs."]],
+["h","OLTP vs OLAP"],
+["t",[["","OLTP","OLAP (DW)"],["Enfoque","Operacional","Analítico"],["Operaciones","CRUD rápido","Solo lectura compleja"],["Tiempo","Actual","Histórico"],["Estructura","Normalizado 3FN","Desnormalizado"],["Orientación","Aplicación","Temas de negocio"]]],
+["h","ETL"],
+["ol",["<b>Extracción:</b> captura periódica desde fuentes heterogéneas.","<b>Transformación</b> (staging area): limpieza, homogeneización, enriquecimiento. Con SP.","<b>Carga:</b> inserción masiva en el DW."]],
+["h","Kimball: 4 pasos"],
+["ol",["<b>Proceso de negocio:</b> qué área se modela.","<b>Detalle:</b> qué representa <b>una fila</b> de hechos.","<b>Dimensiones:</b> ¿quién? ¿dónde? ¿cuándo? ¿qué?","<b>Hechos:</b> métricas medibles."]],
+["p","<b>Ventas en Caja</b> (detalle = cada ítem del ticket). Dimensiones: Tiempo, Producto, Sucursal, Cliente, Medio de pago. Hechos: Cantidad_Vendida, Precio_Unitario, Monto_Total_Venta, Monto_Descuento, Costo_Producto."],
+["h","Estrella vs copo de nieve"],
+["t",[["","Estrella","Copo de nieve"],["Dimensiones","Desnormalizadas","Normalizadas (3FN)"],["Ventas Lácteos","1 JOIN","3 JOINs"],["Disco","Más","Menos"],["Lectura","Más rápida","Más lenta"]]],
+["p","Se prefiere la <b>estrella</b>: el disco es barato, el tiempo del usuario no."],
+["code","SELECT p.categoria, SUM(h.monto_total_venta) AS total_vendido\nFROM hecho_ventas h\nINNER JOIN dim_producto p ON h.producto_id = p.producto_id\nGROUP BY p.categoria\nORDER BY total_vendido DESC;"],
+["h","Metadata"],
+["ul",["<b>Técnica:</b> tipos, tablas, data lineage, logs del ETL, frecuencia.","<b>De negocio:</b> diccionario, definiciones, reglas (Venta Neta, Cliente Activo)."]],
+["h","Gobierno de datos"],
+["p","Marketing dice 1.000 clientes nuevos y Finanzas 600 del mismo DW porque definen distinto \"cliente nuevo\". El gobierno de datos:"],
+["ol",["Crea una <b>única verdad</b> por término.","Asigna <b>Data Owner</b> (dueño) y <b>Data Steward</b> (calidad).","Garantiza seguridad y privacidad."]],
+["p","Metadata = el catálogo. Gobierno = el reglamento y la autoridad."],
+["h","Explotación"],
+["ul",["Dashboards (Power BI, Tableau, Looker).","Self-service BI y consultas ad-hoc.","Analítica avanzada: predictivos, ML, data mining."]],
+["p","Objetivo: democratizar la información y lograr una cultura data-driven."]
+],
+rep:[
+["h","Trampas de examen"],
+["t",[["Pregunta","Correcto","Trampa"],["REVOKE usa…","FROM","TO"],["Vista que filtra columnas","Vertical","Horizontal"],["DROP VIEW borra datos","No","Sí"],["Cambiar vista sin perder permisos","CREATE OR REPLACE","DROP + CREATE"],["Primarios por tabla","Uno","Varios"],["Externo del multinivel","Disperso","Denso"],["Hash para BETWEEN","No sirve","Más rápido"],["EXPLAIN type = ALL","Full table scan","Usó todos los índices"],["ALTER PROCEDURE cambia lógica","No","Sí"],["OLD en INSERT / NEW en DELETE","NULL","Usarlos"],["Validar datos que entran","BEFORE","AFTER"],["SQLSTATE '45000'","Error del usuario","Error del motor"],["Tras última instrucción","Parc. comprometida","Comprometida"],["Transacción terminada","Comprometida o abortada","Solo comprometida"],["Detalle en Kimball","Qué es una fila","Las métricas"],["Data lineage","Metadata técnica","De negocio"],["Custodio de calidad","Data Steward","Data Owner"]]],
+["h","Checklist antes de entregar"],
+["ul",["Trigger: tabla, evento, BEFORE/AFTER, <code>FOR EACH ROW</code>.","OLD/NEW según evento (DELETE solo OLD, INSERT solo NEW).","Validación: <code>SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT</code> dentro de <code>IF … END IF;</code>.","Auditoría: AFTER + <code>OLD.x &lt;&gt; NEW.x</code> + tabla de historial.","SP: <code>DELIMITER //</code> al inicio y <code>DELIMITER ;</code> al final.","SP: IN/OUT con tipo, DECLARE al principio.","SP: <code>SELECT … INTO</code>; <code>CALL</code> + <code>SELECT @var</code>.","Transacción: handler antes de START TRANSACTION, ROLLBACK adentro, COMMIT al final.","Vista: alias en calculadas, sin <code>SELECT *</code> si hay datos sensibles.","Permisos: GRANT … TO, REVOKE … FROM, <code>'usuario'@'localhost'</code>.","Índice: <code>CREATE INDEX nombre ON tabla (col)</code> y verificar con EXPLAIN.","Cada sentencia cierra con <code>;</code>."]]
+]
+};
+const TEO_TABS={...TOPICS,rep:"Repaso final"};
+let teoTab="seg";
+function renderBlocks(bs){return bs.map(([k,v])=>{
+  if(k==="h")return `<h3 class="th">${v}</h3>`;
+  if(k==="p")return `<p class="tp">${v}</p>`;
+  if(k==="ul"||k==="ol")return `<${k} class="tl">${v.map(x=>`<li>${x}</li>`).join("")}</${k}>`;
+  if(k==="code")return `<pre class="sol">${hl(v)}</pre>`;
+  if(k==="t")return `<div class="tw"><table><thead><tr>${v[0].map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${v.slice(1).map(r=>`<tr>${r.map((c,i)=>i===0?`<th scope="row">${esc(c)}</th>`:`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  return "";}).join("")}
+function teoria(tab){
+  if(tab)teoTab=tab;run=null;
+  app.innerHTML=`<header class="top"><div class="brand">Parcial <span>BD</span> · Teoría</div><button class="ghost" id="back">Inicio</button></header>
+  <nav class="ttabs" aria-label="Temas">${Object.entries(TEO_TABS).map(([k,v])=>`<button data-tt="${k}" aria-pressed="${k===teoTab}">${v}</button>`).join("")}</nav>
+  <article class="teo"><h2 class="q" style="margin-top:6px">${TEO_TABS[teoTab]}</h2>${renderBlocks(TEORIA[teoTab])}</article>
+  ${teoTab!=="rep"?`<div class="actions"><button class="primary" id="prac">Practicar ${TEO_TABS[teoTab]}</button></div>`:""}`;
+  document.getElementById("back").onclick=home;
+  app.querySelectorAll("[data-tt]").forEach(b=>b.onclick=()=>{teoria(b.dataset.tt);window.scrollTo(0,0)});
+  const sel=app.querySelector('[data-tt][aria-pressed="true"]');if(sel)sel.scrollIntoView({inline:"center",block:"nearest"});
+  const p=document.getElementById("prac");if(p)p.onclick=()=>start(shuffle(ALL.filter(x=>x.t===teoTab)).slice(0,10));
+}
+
 /* ---------- Vistas ---------- */
 function home(){
   run=null;
@@ -300,7 +476,7 @@ function home(){
    <p>${MC.length} preguntas de teoría y ${SQL.length} ejercicios de SQL sobre Sakila, armados con las clases de Seguridad, Vistas, Índices, SP, Triggers, Transacciones y Data Warehouse.</p></section>
   <section class="sec"><div class="label">Temas</div><div class="topics">${Object.entries(TOPICS).map(([k,v])=>{const s=topicStats(k);const pct=s.n?Math.round(s.ok/s.n*100):0;return `<button class="chip" data-t="${k}" aria-pressed="${S.topics.includes(k)}"><b>${v}</b><small>${s.ok}/${s.n} dominadas</small><span class="mini"><i style="width:${pct}%"></i></span></button>`}).join("")}</div></section>
   <section class="sec"><div class="label">Modo</div><div class="seg">${[["mix","Mixto"],["mc","Teoría"],["sql","Escribir SQL"]].map(([k,v])=>`<button data-m="${k}" aria-pressed="${S.mode===k}">${v}</button>`).join("")}</div></section>
-  <section class="sec"><div class="row"><button class="primary" id="go">Empezar 10 ejercicios</button></div>
+  <section class="sec"><div class="row"><button class="primary" id="go">Empezar 10 ejercicios</button><button class="secondary" id="teo">Teoría</button></div>
    <div class="row"><button class="secondary" id="rev" ${f?"":"disabled"}>Repasar errores (${f})</button><button class="secondary" id="reset">Reiniciar progreso</button></div>
    <p class="note">El progreso queda guardado en este navegador. En los ejercicios de SQL el corrector revisa las piezas clave de tu consulta y después podés comparar con la solución modelo; no la ejecuta contra MySQL.</p></section>`;
   app.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const t=b.dataset.t;S.topics=S.topics.includes(t)?S.topics.filter(x=>x!==t):[...S.topics,t];save();home()});
@@ -310,6 +486,7 @@ function home(){
     if(!pool.length){alertBox("Elegí al menos un tema con ejercicios para este modo.");return}
     start(shuffle(pool).slice(0,10));
   };
+  document.getElementById("teo").onclick=()=>{teoria();window.scrollTo(0,0)};
   document.getElementById("rev").onclick=()=>start(shuffle(failed().map(k=>byId[k])).slice(0,10));
   const r=document.getElementById("reset");r.onclick=()=>{if(r.dataset.c){S.stats={};save();home()}else{r.dataset.c=1;r.textContent="Tocá de nuevo para confirmar"}};
 }
