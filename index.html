@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Parcial BD">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Parcial BD: Práctica</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: una columna estrecha tipo app, header pegajoso con progreso; las consultas viven en un "editor" de consola */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --ink:#15202b; --muted:#5a6977; --line:#d6dde4;
+  --accent:#2350c2; --accent-ink:#ffffff; --accent-soft:#e3eafb;
+  --ok:#1d7a4b; --ok-soft:#e1f3e9; --bad:#b3261e; --bad-soft:#fbe6e4;
+  --code-bg:#f4f6fa; --code-ink:#1b2a3a; --kw:#2350c2;
+  --f-display:"Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1319; --surface:#171f29; --ink:#e5ecf2; --muted:#92a2b2; --line:#283442;
+  --accent:#7d9bff; --accent-ink:#0e1319; --accent-soft:#1e2a45;
+  --ok:#4fc58c; --ok-soft:#14301f; --bad:#ff7d72; --bad-soft:#3a1916;
+  --code-bg:#111821; --code-ink:#d7e2ee; --kw:#9db3ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1319; --surface:#171f29; --ink:#e5ecf2; --muted:#92a2b2; --line:#283442;
+  --accent:#7d9bff; --accent-ink:#0e1319; --accent-soft:#1e2a45;
+  --ok:#4fc58c; --ok-soft:#14301f; --bad:#ff7d72; --bad-soft:#3a1916;
+  --code-bg:#111821; --code-ink:#d7e2ee; --kw:#9db3ff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+code,pre,textarea{font-family:var(--f-mono)}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;align-items:center;gap:12px}
+.top .brand{font-family:var(--f-display);font-weight:700;font-size:18px;flex:1;min-width:0}
+.top .brand span{color:var(--accent)}
+.bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px}
+
+/* home */
+.hero{padding-block:18px 8px}
+.hero h1{font-size:clamp(28px,7vw,40px);font-weight:700}
+.hero p{color:var(--muted);margin:8px 0 0;max-width:60ch}
+.sec{margin-top:24px;display:grid;gap:10px}
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.chip{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.chip b{font-weight:600;font-size:15px}
+.chip small{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.chip .mini{width:100%;height:3px;background:var(--line);border-radius:3px;overflow:hidden}
+.chip .mini i{display:block;height:100%;background:var(--ok)}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:10px 6px;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:14px 18px;font-weight:600;font-size:16px;flex:1}
+.secondary{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:13px 18px;font-weight:600;font-size:15px;flex:1}
+.secondary:disabled,.primary:disabled{opacity:.45;cursor:default}
+.note{font-size:13px;color:var(--muted)}
+
+/* question */
+.qhead{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:8px}
+.tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.q{font-family:var(--f-display);font-size:21px;font-weight:500;margin:12px 0 16px;line-height:1.3}
+.q code,.opt code,.expl code{background:var(--code-bg);padding:1px 5px;border-radius:5px;font-size:.85em}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:13px 14px}
+.opt .k{font-family:var(--f-mono);font-weight:600;color:var(--muted);flex:none}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.expl{margin-top:14px;border-left:3px solid var(--ok);background:var(--surface);border-radius:0 10px 10px 0;padding:12px 14px;font-size:15px}
+.expl.wrong{border-left-color:var(--bad)}
+.expl strong{display:block;margin-bottom:4px}
+
+/* editor */
+.task{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:15px}
+.task p{margin:0 0 8px}.task p:last-child{margin:0}
+.task ul{margin:6px 0 0;padding-left:20px}
+.editor{margin-top:12px;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--code-bg)}
+.editor .prompt{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:12px;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--line)}
+textarea{display:block;width:100%;min-height:200px;border:0;background:transparent;color:var(--code-ink);font-size:14px;line-height:1.55;padding:12px;resize:vertical}
+.keys{display:flex;gap:6px;overflow-x:auto;padding:8px;border-top:1px solid var(--line);-webkit-overflow-scrolling:touch}
+.keys button{flex:none;font-family:var(--f-mono);font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px;white-space:nowrap}
+.checks{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.checks li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.checks li .m{font-weight:700;flex:none;width:16px}
+.checks li.p .m{color:var(--ok)}.checks li.f .m{color:var(--bad)}
+pre.sol{margin:12px 0 0;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:13px;line-height:1.55;overflow-x:auto;white-space:pre}
+pre.sol .kw{color:var(--kw);font-weight:600}
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+
+/* result */
+.score{font-family:var(--f-display);font-size:64px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.score small{font-size:24px;color:var(--muted)}
+.list{display:grid;gap:6px;margin-top:8px}
+.list div{display:flex;gap:10px;font-size:14.5px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.list .m{font-weight:700;flex:none}
+.list .p .m{color:var(--ok)}.list .f .m{color:var(--bad)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+const TOPICS={seg:"Seguridad",vis:"Vistas",idx:"Índices",sp:"Stored Procedures",trg:"Triggers",tx:"Transacciones",dw:"Data Warehouse"};
+
+/* ---------- Opción múltiple ---------- */
+const MC=[
+/* Seguridad */
+{id:"s1",t:"seg",q:"¿Qué establece el <b>principio de menor privilegio</b>?",o:["Cada usuario o aplicación tiene solo los derechos mínimos necesarios para su función","Los usuarios nuevos arrancan sin permisos hasta que el DBA los revisa","Solo el usuario root puede otorgar permisos","Los privilegios se otorgan siempre a roles y nunca a usuarios"],a:0,e:"Reduce la superficie de ataque: si la app se vulnera, el daño queda limitado a lo que ese usuario podía hacer."},
+{id:"s2",t:"seg",q:"En <code>GRANT ALL PRIVILEGES ON sucursal TO public</code>, ¿qué significa <code>public</code>?",o:["Todos los usuarios presentes y futuros del sistema","Solo los usuarios conectados en este momento","Los usuarios sin rol asignado","El esquema público de la base"],a:0,e:"<code>public</code> refiere a todos los usuarios, incluidos los que se creen después."},
+{id:"s3",t:"seg",q:"La autorización de <b>update</b> permite…",o:["Modificar datos, pero no borrarlos","Modificar y borrar datos","Insertar y modificar datos","Modificar el esquema de la tabla"],a:0,e:"Cada privilegio es independiente: update modifica, delete borra, insert inserta."},
+{id:"s4",t:"seg",q:"¿Cuál es la ventaja principal de RBAC frente a asignar permisos usuario por usuario?",o:["Si cambian las responsabilidades de alguien, solo se le cambia el rol","Los roles cifran los datos sensibles","Elimina la necesidad de usar GRANT","Permite que cada usuario defina sus propios permisos"],a:0,e:"Los privilegios se dan al rol y los usuarios son miembros. Además facilita auditar y permite jerarquía de roles."},
+{id:"s5",t:"seg",q:"Una vista que muestra solo las columnas no sensibles de <code>empleados</code> (sin sueldo ni cuenta bancaria) implementa seguridad…",o:["Vertical","Horizontal","Discrecional","Por roles"],a:0,e:"Vertical = filtrado de columnas. Horizontal = filtrado de filas con WHERE."},
+{id:"s6",t:"seg",q:"Una vista con <code>WHERE departamento_id = 3</code> para que un gerente vea solo a su gente implementa seguridad…",o:["Horizontal (filtrado de filas)","Vertical (filtrado de columnas)","Multinivel","Por índice"],a:0,e:"Filtrar tuplas con WHERE es seguridad horizontal."},
+{id:"s7",t:"seg",q:"¿Qué sintaxis quita permisos correctamente?",o:["<code>REVOKE SELECT ON sucursal FROM U1</code>","<code>REVOKE SELECT ON sucursal TO U1</code>","<code>DROP GRANT SELECT ON sucursal FOR U1</code>","<code>GRANT NONE ON sucursal TO U1</code>"],a:0,e:"GRANT usa TO, REVOKE usa FROM."},
+{id:"s8",t:"seg",q:"¿Para qué sirve <code>SET DEFAULT ROLE 'rol_x' TO 'juan'@'localhost'</code>?",o:["Que el rol quede activo automáticamente al iniciar sesión","Crear el rol si no existe","Darle al usuario todos los privilegios del servidor","Quitar los roles anteriores del usuario"],a:0,e:"En MySQL, un rol asignado con GRANT no está activo por defecto hasta que se lo marca como DEFAULT ROLE (o se hace SET ROLE)."},
+{id:"s9",t:"seg",q:"En el modelo DAC, ¿quién decide los permisos sobre una tabla?",o:["El propietario o administrador del objeto, a su discreción","Una política central obligatoria que nadie puede cambiar","El motor, según la sensibilidad del dato","Cada usuario sobre sí mismo"],a:0,e:"Discretionary: el dueño concede o revoca a su criterio con GRANT/REVOKE."},
+{id:"s10",t:"seg",q:"La autorización de <b>alteración</b> sobre el esquema permite…",o:["Añadir o borrar atributos de una relación","Crear relaciones nuevas","Crear y borrar índices","Borrar relaciones"],a:0,e:"Índices = autorización de índices; relaciones nuevas = recursos; agregar/quitar atributos = alteración; borrar relaciones = eliminación."},
+/* Vistas */
+{id:"v1",t:"vis",q:"¿Qué almacena físicamente una vista?",o:["Solo la consulta SQL que la define","Una copia de los datos que devuelve","Los índices de las tablas base","Un snapshot que se actualiza cada noche"],a:0,e:"Es una relación virtual: al consultarla el motor ejecuta la consulta al vuelo."},
+{id:"v2",t:"vis",q:"Si el SELECT de una vista incluye <code>rental_rate * 1.21</code>, ¿qué es obligatorio?",o:["Asignarle un alias con AS","Agregar GROUP BY","Usar CREATE OR REPLACE","Que la columna esté indexada"],a:0,e:"Columnas calculadas o con nombre duplicado entre tablas necesitan alias."},
+{id:"v3",t:"vis",q:"Ejecutás <code>DROP VIEW v_catalogo_accion;</code>. ¿Qué pasa con las películas de acción en <code>film</code>?",o:["Nada, solo se borra la definición de la vista","Se borran de film","Quedan marcadas como inválidas","Se mueven a una tabla temporal"],a:0,e:"La vista no tiene datos propios; DROP VIEW borra la estructura, no las filas base."},
+{id:"v4",t:"vis",q:"¿Por qué usar <code>CREATE OR REPLACE VIEW</code> en vez de DROP + CREATE?",o:["Cambia la consulta sin perder los permisos asignados a la vista","Es más rápido de ejecutar","Permite agregar ORDER BY","Copia los datos a disco"],a:0,e:"Reemplazar mantiene los GRANT que ya tenía la vista."},
+{id:"v5",t:"vis",q:"Se renombra una columna de la tabla base y se ajusta la vista para que la app siga funcionando igual. ¿Qué ventaja ilustra?",o:["Independencia lógica de los datos","Seguridad horizontal","Simplificación de consultas","Personalización por perfil"],a:0,e:"La vista aísla a la aplicación de cambios en la estructura interna."},
+{id:"v6",t:"vis",q:"Si borrás la tabla base de una vista, la vista…",o:["Queda en estado inválido","Se borra automáticamente","Sigue funcionando con los últimos datos","Se convierte en tabla"],a:0,e:"La vista depende de sus objetos; sin la tabla no puede ejecutar su consulta."},
+{id:"v7",t:"vis",q:"Según el estándar SQL puro, ¿qué cláusula no se permite dentro de la definición de una vista?",o:["ORDER BY","WHERE","JOIN","GROUP BY"],a:0,e:"El estándar no la permite, aunque MySQL la acepta en ciertos casos."},
+/* Índices */
+{id:"i1",t:"idx",q:"En un índice <b>denso</b>…",o:["Hay una entrada por cada valor de la clave de búsqueda","Hay entradas solo para algunos valores","Se usa una función hash","No hay punteros a registros"],a:0,e:"Denso: un registro índice por cada valor. Disperso: solo algunos."},
+{id:"i2",t:"idx",q:"En un índice <b>disperso</b>, para encontrar un registro se busca la entrada…",o:["Con el valor más grande que sea menor o igual al buscado","Con el valor exacto buscado","Con el valor más chico mayor al buscado","Calculando h(K)"],a:0,e:"Desde ahí se recorre el archivo secuencialmente hasta encontrar el registro."},
+{id:"i3",t:"idx",q:"Ventaja de un índice disperso frente a uno denso:",o:["Ocupa menos espacio y tiene menos mantenimiento en inserciones y borrados","Siempre encuentra el registro más rápido","Sirve para búsquedas por rango y el denso no","No necesita que el archivo esté ordenado"],a:0,e:"El denso suele ser más rápido para localizar; el disperso es más liviano."},
+{id:"i4",t:"idx",q:"¿Cuántos índices primarios puede tener una tabla?",o:["Uno solo","Uno por columna","Hasta 16","Ilimitados"],a:0,e:"Los datos solo se pueden ordenar físicamente de una forma. Secundarios puede haber muchos."},
+{id:"i5",t:"idx",q:"<code>SELECT * FROM customer WHERE last_name='GUINNESS'</code> con índice secundario en last_name. ¿Qué hace el motor?",o:["Busca en el secundario, obtiene el customer_id y con él va al índice primario por la fila","Va directo al índice primario","Hace full table scan","Busca en el secundario, que tiene la fila completa"],a:0,e:"El secundario apunta a la clave primaria; el primario entrega la fila."},
+{id:"i6",t:"idx",q:"En <code>EXPLAIN</code>, ¿qué indica <code>type = ALL</code> con <code>key = NULL</code>?",o:["Full table scan, no se usó ningún índice","Búsqueda por índice primario","Búsqueda por índice secundario","Se usaron todos los índices"],a:0,e:"const = primario, ref = secundario, ALL = recorrer toda la tabla."},
+{id:"i7",t:"idx",q:"<code>EXPLAIN SELECT * FROM customer WHERE customer_id = 5</code> devuelve…",o:["type = const, key = PRIMARY, rows = 1","type = ref, key = idx_last_name","type = ALL, key = NULL","type = range, key = PRIMARY, rows = 599"],a:0,e:"Búsqueda por PK: un solo acceso al árbol, una fila."},
+{id:"i8",t:"idx",q:"¿Para qué consulta es mala opción un índice hash?",o:["<code>WHERE length BETWEEN 90 AND 120</code>","<code>WHERE customer_id = 14</code>","<code>WHERE email = 'a@b.com'</code>","<code>WHERE dni = 30111222</code>"],a:0,e:"Hash no guarda orden: es ultra rápido para igualdad y no sirve para rangos."},
+{id:"i9",t:"idx",q:"¿Qué es una cadena de desbordamiento?",o:["Cajones auxiliares enlazados por punteros cuando el cajón principal se llena","Un índice sobre otro índice","La secuencia de nodos de un B-Tree","Una cola de transacciones pendientes"],a:0,e:"El riesgo: con 3 cajones auxiliares puede hacer falta hasta 4 lecturas de disco."},
+{id:"i10",t:"idx",q:"En un índice multinivel, el índice <b>externo</b> es…",o:["Un índice disperso construido sobre el índice interno","Un índice denso sobre el archivo de datos","Un índice hash sobre la PK","El índice primario original"],a:0,e:"Interno = primario sobre los datos. Externo = disperso sobre el interno."},
+{id:"i11",t:"idx",q:"Una causa de desbordamiento de cajones aunque sobren cajones vacíos:",o:["Sesgo: muchos registros con la misma clave o una función hash que no dispersa bien","Que la tabla tenga índice primario","Usar búsquedas por rango","Que haya pocos usuarios concurrentes"],a:0,e:"Insuficiencia de cajones o skew (claves no uniformes / mala función hash)."},
+/* SP */
+{id:"p1",t:"sp",q:"Un parámetro <code>INOUT</code>…",o:["Entra con un valor, el SP lo modifica y lo devuelve","Solo se lee dentro del SP","Solo devuelve un valor al final","Es una variable local del SP"],a:0,e:"IN entra (solo lectura), OUT sale, INOUT entra y sale transformado."},
+{id:"p2",t:"sp",q:"¿Qué permite cambiar <code>ALTER PROCEDURE</code> en MySQL?",o:["Solo metadatos, como comentarios o seguridad","El cuerpo BEGIN…END","Los parámetros","El nombre y los parámetros"],a:0,e:"Para cambiar la lógica: DROP PROCEDURE IF EXISTS + CREATE de nuevo."},
+{id:"p3",t:"sp",q:"Después de <code>CALL sp_x(1, @cat, @desc);</code>, ¿cómo ves los resultados?",o:["<code>SELECT @cat, @desc;</code>","Se muestran solos como tabla","<code>SHOW @cat;</code>","<code>RETURN @cat;</code>"],a:0,e:"Los OUT quedan en variables de sesión con @."},
+{id:"p4",t:"sp",q:"¿Por qué se usa <code>DELIMITER //</code> antes de crear un SP?",o:["Para que los ; internos no terminen la sentencia CREATE antes de tiempo","Para marcar comentarios","Porque los SP no aceptan punto y coma","Para separar parámetros"],a:0,e:"El cliente cortaría en el primer ; del cuerpo. Al final se vuelve con DELIMITER ;"},
+{id:"p5",t:"sp",q:"¿Qué estructura conviene para evaluar opciones fijas como el rating G / PG / R?",o:["CASE","WHILE","LOOP con LEAVE","REPEAT"],a:0,e:"CASE para opciones múltiples fijas, IF para rangos/condiciones, WHILE para iterar."},
+{id:"p6",t:"sp",q:"¿Para qué no sirve principalmente un Stored Procedure?",o:["Para dispararse solo ante un INSERT en una tabla","Encapsular lógica de negocio en la base","Ejecutar operaciones como una unidad atómica","Automatizar procesos repetitivos"],a:0,e:"Eso es un trigger. El SP se invoca explícitamente con CALL."},
+{id:"p7",t:"sp",q:"¿Dónde va <code>DECLARE v_contador INT DEFAULT 1;</code>?",o:["Al principio del bloque BEGIN, antes de las demás sentencias","En cualquier lugar del cuerpo","Fuera del BEGIN…END","Después de END"],a:0,e:"En MySQL los DECLARE van al inicio del bloque (variables, luego cursores, luego handlers)."},
+/* Triggers */
+{id:"t1",t:"trg",q:"¿Qué significa <code>SQLSTATE '45000'</code>?",o:["Excepción personalizada definida por el usuario","Violación de clave foránea","Warning sin error","Deadlock"],a:0,e:"Es el código reservado para errores propios, lanzados con SIGNAL."},
+{id:"t2",t:"trg",q:"En un trigger de <b>INSERT</b>, ¿qué contiene <code>OLD</code>?",o:["Nada (NULL), la fila no existía","Los datos ingresados","Los datos originales","La fila anterior en la tabla"],a:0,e:"INSERT: solo NEW. DELETE: solo OLD. UPDATE: ambos."},
+{id:"t3",t:"trg",q:"En un trigger de <b>DELETE</b>, ¿qué contiene <code>NEW</code>?",o:["Nada (NULL), la fila deja de existir","Los datos eliminados","Una copia de OLD","La siguiente fila"],a:0,e:"Para respaldar lo borrado se usa OLD."},
+{id:"t4",t:"trg",q:"Para validar que <code>amount > 0</code> y frenar el insert, el momento correcto es…",o:["BEFORE INSERT","AFTER INSERT","AFTER UPDATE","BEFORE DELETE"],a:0,e:"BEFORE se ejecuta antes de aplicar el cambio: ideal para validar o transformar."},
+{id:"t5",t:"trg",q:"Para auditar cambios guardando un historial, lo típico es…",o:["AFTER","BEFORE","INSTEAD OF","ON COMMIT"],a:0,e:"AFTER corre cuando la modificación ya se aplicó: auditoría y trazabilidad."},
+{id:"t6",t:"trg",q:"¿Qué implica <code>FOR EACH ROW</code>?",o:["El trigger se ejecuta una vez por cada fila afectada","Se ejecuta una vez por sentencia","Afecta a todas las filas de la tabla","Recorre la tabla con un cursor"],a:0,e:"Los triggers trabajan a nivel de fila; por eso existen OLD y NEW."},
+{id:"t7",t:"trg",q:"¿A cuántas tablas puede estar asociado un trigger?",o:["A una sola","A todas las del esquema","A una tabla y sus vistas","A dos como máximo"],a:0,e:"Pertenece estrictamente a una tabla."},
+{id:"t8",t:"trg",q:"En un trigger de UPDATE, para registrar la diferencia de tarifa usás…",o:["<code>NEW.rental_rate - OLD.rental_rate</code>","<code>OLD.rental_rate - NULL</code>","<code>NEW.rental_rate</code> solamente","<code>@rental_rate</code>"],a:0,e:"En UPDATE OLD tiene el valor previo y NEW el nuevo."},
+{id:"t9",t:"trg",q:"¿Qué comando lanza la excepción dentro del trigger?",o:["SIGNAL","RAISE","THROW","ROLLBACK"],a:0,e:"<code>SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '...'</code>"},
+/* Transacciones */
+{id:"x1",t:"tx",q:"¿Qué significa la A de ACID?",o:["Atomicidad: se ejecuta todo o nada","Aislamiento","Autorización","Auditoría"],a:0,e:"Atomicidad, Consistencia, Aislamiento (Isolation), Durabilidad."},
+{id:"x2",t:"tx",q:"Se ejecutó la última instrucción pero aún no se confirmó. Estado:",o:["Parcialmente comprometida","Comprometida","Activa","Fallida"],a:0,e:"Activa → parcialmente comprometida → comprometida (o fallida → abortada)."},
+{id:"x3",t:"tx",q:"Una transacción se considera <b>terminada</b> si…",o:["Se comprometió o se abortó","Ejecutó su última instrucción","Entró en estado fallida","Hizo START TRANSACTION"],a:0,e:"Terminada = comprometida o abortada."},
+{id:"x4",t:"tx",q:"Después de un <code>ROLLBACK</code>, la base queda…",o:["En el estado exacto que tenía antes del START TRANSACTION","Con los cambios hasta la sentencia que falló","Sin datos en las tablas afectadas","Bloqueada hasta un COMMIT"],a:0,e:"Revierte absolutamente todas las operaciones del bloque."},
+{id:"x5",t:"tx",q:"En <code>DECLARE EXIT HANDLER FOR SQLEXCEPTION</code>, ¿qué hace EXIT?",o:["Cancela de inmediato la ejecución del resto del procedimiento","Ignora el error y continúa","Reintenta la sentencia","Cierra la conexión"],a:0,e:"Ejecuta el bloque del handler (ROLLBACK, mensaje) y sale del BEGIN…END."},
+{id:"x6",t:"tx",q:"¿Qué errores captura <code>SQLEXCEPTION</code>?",o:["Cualquier error SQL: FK inválida, PK duplicada, NULL en NOT NULL…","Solo los SIGNAL '45000'","Solo warnings","Solo errores de sintaxis al crear el SP"],a:0,e:"Es la condición global de errores en tiempo de ejecución."},
+{id:"x7",t:"tx",q:"¿Qué hace <code>COMMIT</code>?",o:["Guarda de forma permanente los cambios y los hace visibles a otros usuarios","Inicia la transacción","Deshace los cambios","Bloquea la tabla"],a:0,e:"Cierra el bloque con éxito: estado comprometida."},
+{id:"x8",t:"tx",q:"Pasás un <code>customer_id</code> inexistente a un SP con handler y transacción. ¿Qué pasa?",o:["Falla la FK, entra al handler, hace ROLLBACK y devuelve el mensaje de error","Se inserta igual el pago","Se hace COMMIT parcial","El SP queda colgado esperando"],a:0,e:"Es exactamente el caso 'cliente inexistente' que pide el ejercicio."},
+/* DW */
+{id:"d1",t:"dw",q:"Un sistema OLTP está típicamente…",o:["Normalizado (3FN), con muchos INSERT/UPDATE/DELETE","Desnormalizado y de solo lectura","Orientado a temas de negocio","Con datos históricos de años"],a:0,e:"OLTP = operación diaria. OLAP/DW = análisis histórico, desnormalizado."},
+{id:"d2",t:"dw",q:"¿Cuál NO es un motivo para evitar analítica sobre la base operacional?",o:["Las tablas OLTP no permiten SELECT","Consultas pesadas bloquean la operación","Se pierde historial porque los datos se sobrescriben","Demasiados JOINs ralentizan la respuesta"],a:0,e:"Los motivos son bloqueo/rendimiento, pérdida de historial, silos y complejidad estructural."},
+{id:"d3",t:"dw",q:"En los 4 pasos de Kimball, 'definir el detalle' responde a…",o:["¿Qué representa exactamente una fila de la tabla de hechos?","¿Qué métricas se miden?","¿Quién, dónde, cuándo?","¿Qué proceso de negocio modelamos?"],a:0,e:"Orden: proceso de negocio → detalle (granularidad) → dimensiones → hechos."},
+{id:"d4",t:"dw",q:"En 'Ventas en Caja', <code>Monto_Total_Venta</code> es…",o:["Un hecho (métrica)","Una dimensión","Metadata de negocio","Un atributo de la dimensión Producto"],a:0,e:"Hechos = valores medibles. Dimensiones = contexto (tiempo, producto, sucursal, cliente, medio de pago)."},
+{id:"d5",t:"dw",q:"¿Por qué en general se prefiere el esquema en estrella al copo de nieve?",o:["Resuelve consultas con menos JOINs; el disco es barato y el tiempo del usuario no","Ahorra espacio en disco","Está normalizado en 3FN","Evita tener tabla de hechos"],a:0,e:"El copo normaliza dimensiones (más JOINs). La estrella prioriza velocidad de lectura."},
+{id:"d6",t:"dw",q:"El <b>data lineage</b> (mapa origen → destino) es metadata…",o:["Técnica","De negocio","De gobierno","Operacional"],a:0,e:"Técnica: tipos, tablas, linaje, logs de ETL. Negocio: diccionario, definiciones, reglas."},
+{id:"d7",t:"dw",q:"¿En qué etapa del ETL está la staging area con limpieza y homogeneización?",o:["Transformación","Extracción","Carga","Explotación"],a:0,e:"Transformación: limpieza, homogeneización y enriquecimiento."},
+{id:"d8",t:"dw",q:"Marketing dice 1.000 clientes nuevos y Finanzas 600, del mismo DW. ¿Qué falta?",o:["Gobierno de datos: una definición oficial única (single source of truth)","Más índices","Un esquema copo de nieve","Otro proceso ETL"],a:0,e:"Metadata es el mapa; el gobierno de datos es la autoridad que fija la definición."},
+{id:"d9",t:"dw",q:"El responsable de la calidad del dato es el…",o:["Data Steward","Data Owner","DBA","Analista BI"],a:0,e:"Owner = dueño del dato. Steward = custodio de su calidad."},
+{id:"d10",t:"dw",q:"El copo de nieve se caracteriza por…",o:["Dimensiones normalizadas divididas en sub-tablas jerárquicas","No tener tabla de hechos","Tener todas las dimensiones en una sola tabla","Usar índices hash"],a:0,e:"Ej.: Producto → Subcategoría → Categoría como tablas separadas."}
+];
+
+/* ---------- Ejercicios SQL ---------- */
+const R=(s)=>new RegExp(s);
+const SQL=[
+{id:"q1",t:"seg",title:"GRANT básico",task:"<p>Otorgá permiso de <b>lectura</b> sobre la tabla <code>sucursal</code> a los usuarios <code>U1</code>, <code>U2</code> y <code>U3</code>.</p>",
+ checks:[[R("GRANT SELECT ON SUCURSAL"),"GRANT SELECT ON sucursal"],[R("TO U1 ?, ?U2 ?, ?U3"),"TO U1, U2, U3"]],
+ sol:"GRANT SELECT ON sucursal TO U1, U2, U3;"},
+{id:"q2",t:"seg",title:"REVOKE sobre una columna",task:"<p>Quitale a <code>U1</code> y <code>U2</code> el permiso de <b>modificar</b> solo la columna <code>importe</code> de la tabla <code>prestamo</code>.</p>",
+ checks:[[R("REVOKE UPDATE ?\\( ?IMPORTE ?\\)"),"REVOKE UPDATE (importe)"],[R("ON PRESTAMO"),"ON prestamo"],[R("FROM U1 ?, ?U2"),"FROM U1, U2 (REVOKE usa FROM, no TO)"]],
+ sol:"REVOKE UPDATE (importe) ON prestamo FROM U1, U2;"},
+{id:"q3",t:"seg",title:"Rol completo para cobranzas",task:"<p>En Sakila:</p><ul><li>Creá el rol <code>rol_cobranzas</code> (si no existe).</li><li>Dale <code>SELECT</code> e <code>INSERT</code> sobre <code>sakila.payment</code>.</li><li>Creá el usuario <code>maria_gomez@localhost</code> con una clave.</li><li>Asignale el rol y dejalo activo por defecto.</li><li>Verificá los permisos del usuario.</li></ul>",
+ checks:[[R("CREATE ROLE (IF NOT EXISTS )?'?ROL_COBRANZAS"),"CREATE ROLE rol_cobranzas"],[R("GRANT SELECT ?, ?INSERT ON SAKILA\\.PAYMENT TO '?ROL_COBRANZAS"),"GRANT SELECT, INSERT ON sakila.payment TO el rol"],[R("CREATE USER (IF NOT EXISTS )?'?MARIA_GOMEZ'?@'?LOCALHOST'? IDENTIFIED BY"),"CREATE USER ... IDENTIFIED BY"],[R("GRANT '?ROL_COBRANZAS'? TO '?MARIA_GOMEZ"),"GRANT 'rol' TO usuario"],[R("SET DEFAULT ROLE '?ROL_COBRANZAS'? TO '?MARIA_GOMEZ"),"SET DEFAULT ROLE"],[R("SHOW GRANTS FOR '?MARIA_GOMEZ"),"SHOW GRANTS FOR usuario"]],
+ sol:"CREATE ROLE IF NOT EXISTS 'rol_cobranzas';\nGRANT SELECT, INSERT ON sakila.payment TO 'rol_cobranzas';\nCREATE USER IF NOT EXISTS 'maria_gomez'@'localhost' IDENTIFIED BY 'Clave2026!';\nGRANT 'rol_cobranzas' TO 'maria_gomez'@'localhost';\nSET DEFAULT ROLE 'rol_cobranzas' TO 'maria_gomez'@'localhost';\nSHOW GRANTS FOR 'maria_gomez'@'localhost';"},
+{id:"q4",t:"seg",title:"Vista segura para gerente de tienda 1",task:"<p>RRHH quiere que el gerente de la tienda 1 vea a su personal sin ver la contraseña.</p><ul><li>Creá <code>v_staff_tienda1</code> con <code>staff_id, first_name, last_name, email, store_id</code> de <code>staff</code>, solo de <code>store_id = 1</code>.</li><li>Dale <code>SELECT</code> sobre la vista al rol <code>rol_gerente_t1</code>.</li></ul>",
+ checks:[[R("CREATE (OR REPLACE )?VIEW V_STAFF_TIENDA1 AS"),"CREATE VIEW v_staff_tienda1 AS"],[R("FROM (SAKILA\\.)?STAFF"),"FROM staff"],[R("WHERE \\(?(\\w+\\.)?STORE_ID ?= ?1"),"WHERE store_id = 1 (seguridad horizontal)"],[R("GRANT SELECT ON (SAKILA\\.)?V_STAFF_TIENDA1 TO '?ROL_GERENTE_T1"),"GRANT SELECT sobre la vista al rol"]],
+ forbid:[[R("PASSWORD"),"La vista no debe exponer password (seguridad vertical)"],[R("SELECT \\*"),"No uses SELECT *: expondría password"]],
+ sol:"CREATE VIEW v_staff_tienda1 AS\nSELECT staff_id, first_name, last_name, email, store_id\nFROM staff\nWHERE store_id = 1;\n\nGRANT SELECT ON sakila.v_staff_tienda1 TO 'rol_gerente_t1';"},
+{id:"q5",t:"vis",title:"Catálogo de Acción",task:"<p>Atención al cliente necesita ver las películas de la categoría <code>'Action'</code> como si fuera una tabla, sin <code>rental_rate</code> ni <code>replacement_cost</code>.</p><p>Creá <code>v_catalogo_accion</code> con <code>film_id, title, description, release_year, rating</code>. Tablas: <code>film</code>, <code>film_category</code>, <code>category</code> (columna <code>name</code>).</p>",
+ checks:[[R("CREATE (OR REPLACE )?VIEW V_CATALOGO_ACCION AS"),"CREATE VIEW v_catalogo_accion AS"],[R("FILM_CATEGORY"),"JOIN con film_category"],[R("JOIN (SAKILA\\.)?CATEGORY"),"JOIN con category"],[R("NAME ?= ?'ACTION'"),"WHERE c.name = 'Action'"],[R("TITLE"),"Incluye title"]],
+ forbid:[[R("RENTAL_RATE"),"No debe mostrar rental_rate"],[R("REPLACEMENT_COST"),"No debe mostrar replacement_cost"],[R("SELECT \\*"),"No uses SELECT *"]],
+ sol:"CREATE VIEW v_catalogo_accion AS\nSELECT f.film_id, f.title, f.description, f.release_year, f.rating\nFROM film f\nINNER JOIN film_category fc ON f.film_id = fc.film_id\nINNER JOIN category c ON fc.category_id = c.category_id\nWHERE c.name = 'Action';"},
+{id:"q6",t:"vis",title:"Agregar duración sin perder permisos",task:"<p>El gerente pide que <code>v_catalogo_accion</code> muestre también <code>length</code>. Modificala <b>sin perder los permisos</b> ya asignados.</p>",
+ checks:[[R("CREATE OR REPLACE VIEW V_CATALOGO_ACCION AS"),"CREATE OR REPLACE VIEW (no DROP + CREATE)"],[R("LENGTH"),"Incluye length"],[R("NAME ?= ?'ACTION'"),"Mantiene el filtro 'Action'"]],
+ forbid:[[R("DROP VIEW"),"DROP VIEW pierde los permisos de la vista"]],
+ sol:"CREATE OR REPLACE VIEW v_catalogo_accion AS\nSELECT f.film_id, f.title, f.description, f.release_year, f.rating, f.length\nFROM film f\nINNER JOIN film_category fc ON f.film_id = fc.film_id\nINNER JOIN category c ON fc.category_id = c.category_id\nWHERE c.name = 'Action';"},
+{id:"q7",t:"vis",title:"Vista con columna calculada",task:"<p>Creá <code>v_precio_con_iva</code> con <code>film_id</code>, <code>title</code> y la tarifa de alquiler con IVA (<code>rental_rate * 1.21</code>) llamada <code>tarifa_final</code>.</p>",
+ checks:[[R("CREATE (OR REPLACE )?VIEW V_PRECIO_CON_IVA AS"),"CREATE VIEW v_precio_con_iva AS"],[R("RENTAL_RATE ?\\* ?1\\.21"),"rental_rate * 1.21"],[R("1\\.21\\)? AS TARIFA_FINAL"),"Alias obligatorio: AS tarifa_final"],[R("FROM (SAKILA\\.)?FILM"),"FROM film"]],
+ sol:"CREATE VIEW v_precio_con_iva AS\nSELECT film_id, title, rental_rate * 1.21 AS tarifa_final\nFROM film;"},
+{id:"q8",t:"idx",title:"Sacar un full table scan",task:"<p><code>EXPLAIN SELECT * FROM film WHERE length = 120;</code> da <code>type = ALL</code>. Creá un índice <code>idx_film_length</code> sobre <code>length</code> y volvé a correr el EXPLAIN.</p>",
+ checks:[[R("(CREATE INDEX IDX_FILM_LENGTH ON (SAKILA\\.)?FILM ?\\( ?LENGTH ?\\)|ALTER TABLE (SAKILA\\.)?FILM ADD INDEX IDX_FILM_LENGTH ?\\( ?LENGTH ?\\))"),"CREATE INDEX idx_film_length ON film (length)  ó  ALTER TABLE ... ADD INDEX"],[R("EXPLAIN SELECT \\* FROM (SAKILA\\.)?FILM WHERE LENGTH ?= ?120"),"EXPLAIN de la consulta"]],
+ sol:"CREATE INDEX idx_film_length ON film (length);\n-- o: ALTER TABLE film ADD INDEX idx_film_length (length);\n\nEXPLAIN SELECT * FROM film WHERE length = 120;\n-- Ahora: type = ref, key = idx_film_length"},
+{id:"q9",t:"idx",title:"Ver los índices de una tabla",task:"<p>Escribí las dos sentencias para ver los índices de <code>customer</code>: la que los lista y la que muestra el CREATE de la tabla.</p>",
+ checks:[[R("SHOW INDEX(ES)? FROM (SAKILA\\.)?CUSTOMER"),"SHOW INDEX FROM customer"],[R("SHOW CREATE TABLE (SAKILA\\.)?CUSTOMER"),"SHOW CREATE TABLE customer"]],
+ sol:"SHOW INDEX FROM customer;\nSHOW CREATE TABLE customer;"},
+{id:"q10",t:"trg",title:"Pagos con monto positivo",task:"<p>Creá un trigger sobre <code>payment</code> que impida registrar cobros con <code>amount</code> menor o igual a 0, con mensaje de error.</p>",
+ checks:[[R("DELIMITER"),"Usa DELIMITER"],[R("CREATE TRIGGER \\w+ BEFORE INSERT ON (SAKILA\\.)?PAYMENT"),"BEFORE INSERT ON payment"],[R("FOR EACH ROW"),"FOR EACH ROW"],[R("NEW\\.AMOUNT ?<= ?0"),"Condición NEW.amount <= 0"],[R("SIGNAL SQLSTATE '45000'"),"SIGNAL SQLSTATE '45000'"],[R("SET MESSAGE_TEXT ?="),"SET MESSAGE_TEXT = '...'"],[R("END IF"),"Cierra con END IF"]],
+ sol:"DELIMITER //\nCREATE TRIGGER trg_payment_monto_positivo\nBEFORE INSERT ON payment\nFOR EACH ROW\nBEGIN\n  IF NEW.amount <= 0 THEN\n    SIGNAL SQLSTATE '45000'\n      SET MESSAGE_TEXT = 'El monto del pago debe ser mayor a 0';\n  END IF;\nEND //\nDELIMITER ;"},
+{id:"q11",t:"trg",title:"Email con @",task:"<p>Trigger sobre <code>customer</code> que verifique que el <code>email</code> ingresado contenga <code>@</code>. Si no, abortá con error.</p>",
+ checks:[[R("BEFORE INSERT ON (SAKILA\\.)?CUSTOMER"),"BEFORE INSERT ON customer"],[R("FOR EACH ROW"),"FOR EACH ROW"],[R("(NEW\\.EMAIL NOT LIKE '%@%'|LOCATE ?\\( ?'@' ?, ?NEW\\.EMAIL ?\\) ?= ?0|INSTR ?\\( ?NEW\\.EMAIL ?, ?'@' ?\\) ?= ?0)"),"NEW.email NOT LIKE '%@%' (o LOCATE/INSTR = 0)"],[R("SIGNAL SQLSTATE '45000'"),"SIGNAL SQLSTATE '45000'"],[R("MESSAGE_TEXT"),"Mensaje de error"]],
+ sol:"DELIMITER //\nCREATE TRIGGER trg_customer_email_valido\nBEFORE INSERT ON customer\nFOR EACH ROW\nBEGIN\n  IF NEW.email NOT LIKE '%@%' THEN\n    SIGNAL SQLSTATE '45000'\n      SET MESSAGE_TEXT = 'El email debe contener @';\n  END IF;\nEND //\nDELIMITER ;\n-- Tip: un BEFORE UPDATE igual cubre las modificaciones."},
+{id:"q12",t:"trg",title:"Devolución anterior al alquiler",task:"<p>Trigger sobre <code>rental</code> que impida registrar un alquiler cuyo <code>return_date</code> sea anterior a <code>rental_date</code>.</p>",
+ checks:[[R("BEFORE INSERT ON (SAKILA\\.)?RENTAL"),"BEFORE INSERT ON rental"],[R("FOR EACH ROW"),"FOR EACH ROW"],[R("(NEW\\.RETURN_DATE ?< ?NEW\\.RENTAL_DATE|NEW\\.RENTAL_DATE ?> ?NEW\\.RETURN_DATE)"),"NEW.return_date < NEW.rental_date"],[R("SIGNAL SQLSTATE '45000'"),"SIGNAL SQLSTATE '45000'"]],
+ sol:"DELIMITER //\nCREATE TRIGGER trg_rental_fechas\nBEFORE INSERT ON rental\nFOR EACH ROW\nBEGIN\n  IF NEW.return_date < NEW.rental_date THEN\n    SIGNAL SQLSTATE '45000'\n      SET MESSAGE_TEXT = 'La devolucion no puede ser anterior al alquiler';\n  END IF;\nEND //\nDELIMITER ;"},
+{id:"q13",t:"trg",title:"Usuario de 4+ caracteres",task:"<p>Trigger sobre <code>staff</code> que valide que <code>username</code> tenga al menos 4 caracteres.</p>",
+ checks:[[R("BEFORE INSERT ON (SAKILA\\.)?STAFF"),"BEFORE INSERT ON staff"],[R("(CHAR_)?LENGTH ?\\( ?NEW\\.USERNAME ?\\) ?< ?4"),"CHAR_LENGTH(NEW.username) < 4"],[R("SIGNAL SQLSTATE '45000'"),"SIGNAL SQLSTATE '45000'"]],
+ sol:"DELIMITER //\nCREATE TRIGGER trg_staff_username\nBEFORE INSERT ON staff\nFOR EACH ROW\nBEGIN\n  IF CHAR_LENGTH(NEW.username) < 4 THEN\n    SIGNAL SQLSTATE '45000'\n      SET MESSAGE_TEXT = 'El usuario debe tener al menos 4 caracteres';\n  END IF;\nEND //\nDELIMITER ;"},
+{id:"q14",t:"trg",title:"Historial de emails",task:"<p>Creá la tabla <code>historial_email</code> y un trigger que guarde el email anterior (OLD) y el nuevo (NEW) cada vez que un cliente cambie su email.</p>",
+ checks:[[R("CREATE TABLE HISTORIAL_EMAIL"),"CREATE TABLE historial_email"],[R("AFTER UPDATE ON (SAKILA\\.)?CUSTOMER"),"AFTER UPDATE ON customer"],[R("FOR EACH ROW"),"FOR EACH ROW"],[R("OLD\\.EMAIL ?(<>|!=|<=>)"),"Compara OLD.email con NEW.email"],[R("INSERT INTO HISTORIAL_EMAIL"),"INSERT INTO historial_email"],[R("VALUES ?\\(.*OLD\\.EMAIL ?, ?NEW\\.EMAIL"),"Inserta OLD.email y NEW.email"]],
+ sol:"CREATE TABLE historial_email (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  customer_id SMALLINT UNSIGNED,\n  email_anterior VARCHAR(50),\n  email_nuevo VARCHAR(50),\n  fecha_cambio DATETIME\n);\n\nDELIMITER //\nCREATE TRIGGER trg_customer_email_audit\nAFTER UPDATE ON customer\nFOR EACH ROW\nBEGIN\n  IF OLD.email <> NEW.email THEN\n    INSERT INTO historial_email (customer_id, email_anterior, email_nuevo, fecha_cambio)\n    VALUES (OLD.customer_id, OLD.email, NEW.email, NOW());\n  END IF;\nEND //\nDELIMITER ;\n-- Tip: NOT (OLD.email <=> NEW.email) también detecta cambios desde/hacia NULL."},
+{id:"q15",t:"trg",title:"Variación de tarifa",task:"<p>Registrá cada cambio de <code>rental_rate</code> en <code>film</code>: tarifa previa, nueva, diferencia y fecha.</p>",
+ checks:[[R("CREATE TABLE \\w+"),"Tabla de historial"],[R("AFTER UPDATE ON (SAKILA\\.)?FILM"),"AFTER UPDATE ON film"],[R("OLD\\.RENTAL_RATE ?(<>|!=)"),"Solo si cambió la tarifa"],[R("NEW\\.RENTAL_RATE ?- ?OLD\\.RENTAL_RATE"),"Diferencia NEW - OLD"],[R("NOW ?\\( ?\\)|CURRENT_TIMESTAMP"),"Fecha de cambio"]],
+ sol:"CREATE TABLE historial_tarifa (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  film_id SMALLINT UNSIGNED,\n  tarifa_anterior DECIMAL(4,2),\n  tarifa_nueva DECIMAL(4,2),\n  diferencia DECIMAL(5,2),\n  fecha_cambio DATETIME\n);\n\nDELIMITER //\nCREATE TRIGGER trg_film_tarifa_audit\nAFTER UPDATE ON film\nFOR EACH ROW\nBEGIN\n  IF OLD.rental_rate <> NEW.rental_rate THEN\n    INSERT INTO historial_tarifa (film_id, tarifa_anterior, tarifa_nueva, diferencia, fecha_cambio)\n    VALUES (OLD.film_id, OLD.rental_rate, NEW.rental_rate,\n            NEW.rental_rate - OLD.rental_rate, NOW());\n  END IF;\nEND //\nDELIMITER ;"},
+{id:"q16",t:"trg",title:"Respaldo de alquileres borrados",task:"<p>Cuando se elimine un registro de <code>rental</code>, guardá una copia en <code>rental_eliminados</code> con la fecha de baja.</p>",
+ checks:[[R("CREATE TABLE RENTAL_ELIMINADOS"),"CREATE TABLE rental_eliminados"],[R("(AFTER|BEFORE) DELETE ON (SAKILA\\.)?RENTAL"),"AFTER DELETE ON rental"],[R("INSERT INTO RENTAL_ELIMINADOS"),"INSERT INTO rental_eliminados"],[R("OLD\\.RENTAL_ID"),"Usa OLD (NEW es NULL en DELETE)"]],
+ forbid:[[R("NEW\\."),"En DELETE no existe NEW"]],
+ sol:"CREATE TABLE rental_eliminados (\n  rental_id INT,\n  rental_date DATETIME,\n  inventory_id MEDIUMINT UNSIGNED,\n  customer_id SMALLINT UNSIGNED,\n  return_date DATETIME,\n  staff_id TINYINT UNSIGNED,\n  fecha_baja DATETIME\n);\n\nDELIMITER //\nCREATE TRIGGER trg_rental_backup\nAFTER DELETE ON rental\nFOR EACH ROW\nBEGIN\n  INSERT INTO rental_eliminados\n  VALUES (OLD.rental_id, OLD.rental_date, OLD.inventory_id,\n          OLD.customer_id, OLD.return_date, OLD.staff_id, NOW());\nEND //\nDELIMITER ;"},
+{id:"q17",t:"trg",title:"Cambio de sucursal del personal",task:"<p>Cada vez que cambie <code>store_id</code> en <code>staff</code>, registrá la tienda de origen y la de destino en <code>historial_sucursal</code> (ya creada con <code>staff_id, tienda_origen, tienda_destino, fecha</code>).</p>",
+ checks:[[R("AFTER UPDATE ON (SAKILA\\.)?STAFF"),"AFTER UPDATE ON staff"],[R("OLD\\.STORE_ID ?(<>|!=) ?NEW\\.STORE_ID"),"OLD.store_id <> NEW.store_id"],[R("INSERT INTO HISTORIAL_SUCURSAL"),"INSERT INTO historial_sucursal"],[R("OLD\\.STORE_ID ?, ?NEW\\.STORE_ID"),"Origen OLD, destino NEW"]],
+ sol:"DELIMITER //\nCREATE TRIGGER trg_staff_cambio_sucursal\nAFTER UPDATE ON staff\nFOR EACH ROW\nBEGIN\n  IF OLD.store_id <> NEW.store_id THEN\n    INSERT INTO historial_sucursal (staff_id, tienda_origen, tienda_destino, fecha)\n    VALUES (OLD.staff_id, OLD.store_id, NEW.store_id, NOW());\n  END IF;\nEND //\nDELIMITER ;"},
+{id:"q18",t:"sp",title:"Evaluador de fidelidad",task:"<p>Creá <code>sp_evaluar_fidelidad_cliente</code>: recibe el id de cliente y devuelve categoría y descuento (decimal).</p><ul><li>Más de 30 alquileres: <code>'VIP'</code>, 0.20</li><li>Entre 15 y 30: <code>'FRECUENTE'</code>, 0.10</li><li>Menos de 15: <code>'REGULAR'</code>, 0.00</li></ul><p>Incluí el CALL y el SELECT para ver el resultado.</p>",
+ checks:[[R("CREATE PROCEDURE SP_EVALUAR_FIDELIDAD_CLIENTE ?\\("),"CREATE PROCEDURE sp_evaluar_fidelidad_cliente("],[R("IN \\w+"),"Parámetro IN"],[R("OUT \\w+.*OUT \\w+"),"Dos parámetros OUT"],[R("DECLARE \\w+ INT"),"DECLARE de la variable contador"],[R("SELECT COUNT ?\\( ?\\*? ?\\w* ?\\) INTO \\w+ FROM (SAKILA\\.)?RENTAL"),"SELECT COUNT(*) INTO ... FROM rental"],[R("> ?30"),"Condición > 30"],[R("ELSEIF|BETWEEN 15 AND 30|>= ?15"),"Rango 15–30"],[R("'VIP'"),"Categoría 'VIP'"],[R("0?\\.20?\\b"),"Descuento 0.20"],[R("CALL SP_EVALUAR_FIDELIDAD_CLIENTE ?\\( ?\\d+ ?, ?@\\w+ ?, ?@\\w+ ?\\)"),"CALL con variables @"],[R("SELECT @\\w+ ?, ?@\\w+"),"SELECT @categoria, @descuento"]],
+ sol:"DELIMITER //\nCREATE PROCEDURE sp_evaluar_fidelidad_cliente(\n  IN  p_customer_id SMALLINT,\n  OUT p_categoria   VARCHAR(20),\n  OUT p_descuento   DECIMAL(4,2)\n)\nBEGIN\n  DECLARE v_total INT DEFAULT 0;\n\n  SELECT COUNT(*) INTO v_total\n  FROM rental\n  WHERE customer_id = p_customer_id;\n\n  IF v_total > 30 THEN\n    SET p_categoria = 'VIP';       SET p_descuento = 0.20;\n  ELSEIF v_total >= 15 THEN\n    SET p_categoria = 'FRECUENTE'; SET p_descuento = 0.10;\n  ELSE\n    SET p_categoria = 'REGULAR';   SET p_descuento = 0.00;\n  END IF;\nEND //\nDELIMITER ;\n\nCALL sp_evaluar_fidelidad_cliente(1, @categoria, @descuento);\nSELECT @categoria, @descuento;"},
+{id:"q19",t:"sp",title:"Tarifa por rating (CASE)",task:"<p>Creá <code>sp_calcular_precio_rating</code>: recibe un <code>film_id</code> y devuelve precio final y leyenda.</p><ul><li><code>'G'</code>: 10% de descuento, 'Promoción Infantil'</li><li><code>'PG'</code> o <code>'PG-13'</code>: igual, 'Tarifa Estándar'</li><li><code>'R'</code> o <code>'NC-17'</code>: 15% de recargo, 'Tarifa Adultos'</li></ul>",
+ checks:[[R("CREATE PROCEDURE SP_CALCULAR_PRECIO_RATING"),"CREATE PROCEDURE sp_calcular_precio_rating"],[R("OUT \\w+.*OUT \\w+"),"Dos OUT"],[R("SELECT RENTAL_RATE ?, ?RATING INTO"),"SELECT rental_rate, rating INTO ..."],[R("CASE"),"Usa CASE"],[R("0?\\.9\\b|0?\\.90\\b"),"G: * 0.90"],[R("1\\.15"),"R/NC-17: * 1.15"],[R("END CASE"),"END CASE"]],
+ sol:"DELIMITER //\nCREATE PROCEDURE sp_calcular_precio_rating(\n  IN  p_film_id SMALLINT,\n  OUT p_precio  DECIMAL(6,2),\n  OUT p_leyenda VARCHAR(50)\n)\nBEGIN\n  DECLARE v_rate   DECIMAL(4,2);\n  DECLARE v_rating VARCHAR(10);\n\n  SELECT rental_rate, rating INTO v_rate, v_rating\n  FROM film WHERE film_id = p_film_id;\n\n  CASE\n    WHEN v_rating = 'G' THEN\n      SET p_precio = v_rate * 0.90; SET p_leyenda = 'Promoción Infantil';\n    WHEN v_rating IN ('PG','PG-13') THEN\n      SET p_precio = v_rate;        SET p_leyenda = 'Tarifa Estándar';\n    WHEN v_rating IN ('R','NC-17') THEN\n      SET p_precio = v_rate * 1.15; SET p_leyenda = 'Tarifa Adultos';\n  END CASE;\nEND //\nDELIMITER ;\n\nCALL sp_calcular_precio_rating(5, @precio, @leyenda);\nSELECT @precio, @leyenda;"},
+{id:"q20",t:"sp",title:"Generador de cupones (WHILE)",task:"<p>Creá <code>sp_generar_cupones_cliente(p_customer_id, p_cantidad)</code>. Con un <code>WHILE</code> desde 1 hasta <code>p_cantidad</code>, mostrá <code>'CUPON-CLIENTE-[id]-NRO-[i]'</code>.</p>",
+ checks:[[R("CREATE PROCEDURE SP_GENERAR_CUPONES_CLIENTE"),"CREATE PROCEDURE sp_generar_cupones_cliente"],[R("DECLARE V_I INT DEFAULT 1"),"DECLARE v_i INT DEFAULT 1"],[R("WHILE V_I ?<= ?\\w+ DO"),"WHILE v_i <= p_cantidad DO"],[R("CONCAT ?\\( ?'CUPON-CLIENTE-'"),"CONCAT('CUPON-CLIENTE-', ...)"],[R("SET V_I ?= ?V_I ?\\+ ?1"),"SET v_i = v_i + 1"],[R("END WHILE"),"END WHILE"]],
+ sol:"DELIMITER //\nCREATE PROCEDURE sp_generar_cupones_cliente(\n  IN p_customer_id SMALLINT,\n  IN p_cantidad    INT\n)\nBEGIN\n  DECLARE v_i INT DEFAULT 1;\n\n  WHILE v_i <= p_cantidad DO\n    SELECT CONCAT('CUPON-CLIENTE-', p_customer_id, '-NRO-', v_i) AS cupon;\n    SET v_i = v_i + 1;\n  END WHILE;\nEND //\nDELIMITER ;\n\nCALL sp_generar_cupones_cliente(10, 5);"},
+{id:"q21",t:"tx",title:"Pago con transacción y handler",task:"<p>Creá <code>sp_registrar_pago_con_estados</code> que reciba cliente, staff, rental y monto; inserte en <code>payment</code> dentro de una transacción y devuelva un mensaje <code>OUT</code>.</p><p>Si cualquier sentencia falla (ej. cliente inexistente), debe hacer <code>ROLLBACK</code> y devolver un mensaje de error.</p>",
+ checks:[[R("CREATE PROCEDURE SP_REGISTRAR_PAGO_CON_ESTADOS"),"CREATE PROCEDURE ..."],[R("OUT \\w+"),"Parámetro OUT para el mensaje"],[R("DECLARE EXIT HANDLER FOR SQLEXCEPTION"),"DECLARE EXIT HANDLER FOR SQLEXCEPTION"],[R("SQLEXCEPTION BEGIN ROLLBACK"),"El handler hace ROLLBACK"],[R("START TRANSACTION"),"START TRANSACTION"],[R("INSERT INTO (SAKILA\\.)?PAYMENT"),"INSERT INTO payment"],[R("COMMIT"),"COMMIT"],[R("SQLEXCEPTION[\\s\\S]*START TRANSACTION"),"El handler se declara antes de START TRANSACTION"]],
+ sol:"DELIMITER //\nCREATE PROCEDURE sp_registrar_pago_con_estados(\n  IN  p_customer_id SMALLINT,\n  IN  p_staff_id    TINYINT,\n  IN  p_rental_id   INT,\n  IN  p_monto       DECIMAL(5,2),\n  OUT p_mensaje     VARCHAR(100)\n)\nBEGIN\n  DECLARE EXIT HANDLER FOR SQLEXCEPTION\n  BEGIN\n    ROLLBACK;\n    SET p_mensaje = 'Error: transaccion abortada';\n  END;\n\n  START TRANSACTION;\n    INSERT INTO payment (customer_id, staff_id, rental_id, amount, payment_date)\n    VALUES (p_customer_id, p_staff_id, p_rental_id, p_monto, NOW());\n  COMMIT;\n\n  SET p_mensaje = 'Pago registrado: transaccion comprometida';\nEND //\nDELIMITER ;\n\n-- Comprometido:\nCALL sp_registrar_pago_con_estados(1, 1, 76, 2.99, @msg); SELECT @msg;\n-- Abortado (cliente inexistente, falla la FK):\nCALL sp_registrar_pago_con_estados(99999, 1, 76, 2.99, @msg); SELECT @msg;"},
+{id:"q22",t:"tx",title:"Transferencia manual",task:"<p>Sin SP: escribí una transacción que descuente 500 de la cuenta 1 y sume 500 a la cuenta 2 en la tabla <code>cuenta(id, saldo)</code>, y la confirme.</p>",
+ checks:[[R("START TRANSACTION|BEGIN ?;"),"START TRANSACTION"],[R("UPDATE CUENTA SET SALDO ?= ?SALDO ?- ?500 WHERE ID ?= ?1"),"UPDATE cuenta 1: saldo - 500"],[R("UPDATE CUENTA SET SALDO ?= ?SALDO ?\\+ ?500 WHERE ID ?= ?2"),"UPDATE cuenta 2: saldo + 500"],[R("COMMIT"),"COMMIT"]],
+ sol:"START TRANSACTION;\nUPDATE cuenta SET saldo = saldo - 500 WHERE id = 1;\nUPDATE cuenta SET saldo = saldo + 500 WHERE id = 2;\nCOMMIT;\n-- Si algo sale mal antes del COMMIT: ROLLBACK;"},
+{id:"q23",t:"dw",title:"Ventas por categoría (estrella)",task:"<p>Esquema estrella: <code>hecho_ventas(producto_id, fecha_id, sucursal_id, cantidad_vendida, monto_total_venta)</code> y <code>dim_producto(producto_id, nombre, marca, categoria)</code>.</p><p>Calculá el monto total vendido por categoría, de mayor a menor.</p>",
+ checks:[[R("SUM ?\\( ?(\\w+\\.)?MONTO_TOTAL_VENTA ?\\)"),"SUM(monto_total_venta)"],[R("FROM HECHO_VENTAS"),"FROM hecho_ventas"],[R("JOIN DIM_PRODUCTO"),"Un solo JOIN con dim_producto"],[R("ON (\\w+\\.)?PRODUCTO_ID ?= ?(\\w+\\.)?PRODUCTO_ID"),"ON por producto_id"],[R("GROUP BY (\\w+\\.)?CATEGORIA"),"GROUP BY categoria"],[R("ORDER BY .*DESC"),"ORDER BY ... DESC"]],
+ sol:"SELECT p.categoria, SUM(h.monto_total_venta) AS total_vendido\nFROM hecho_ventas h\nINNER JOIN dim_producto p ON h.producto_id = p.producto_id\nGROUP BY p.categoria\nORDER BY total_vendido DESC;\n-- En copo de nieve harían falta más JOINs (producto → subcategoría → categoría)."}
+];
+
+const KEYS=["SELECT","FROM","WHERE","JOIN","ON","AS",";","(",")","'","=","<=","<>","*",",","NEW.","OLD.","@","DELIMITER //","END //","DELIMITER ;","BEGIN","END;","IF","THEN","END IF;","SIGNAL SQLSTATE '45000'","SET MESSAGE_TEXT = ''","FOR EACH ROW","CREATE TRIGGER","BEFORE INSERT ON","AFTER UPDATE ON","CREATE PROCEDURE","DECLARE","IN","OUT","CREATE VIEW","GRANT","REVOKE","TO","START TRANSACTION;","COMMIT;","ROLLBACK;"];
+
+/* ---------- Estado ---------- */
+const store={get(){try{return JSON.parse(localStorage.getItem("bdprac")||"{}")}catch(e){return{}}},set(v){try{localStorage.setItem("bdprac",JSON.stringify(v))}catch(e){}}};
+let S=Object.assign({topics:Object.keys(TOPICS),mode:"mix",stats:{}},store.get());
+const save=()=>store.set({topics:S.topics,mode:S.mode,stats:S.stats});
+let run=null;
+const app=document.getElementById("app");
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const ALL=[...MC.map(x=>({...x,kind:"mc"})),...SQL.map(x=>({...x,kind:"sql"}))];
+const byId=Object.fromEntries(ALL.map(x=>[x.id,x]));
+function topicStats(t){const items=ALL.filter(x=>x.t===t);let seen=0,ok=0;items.forEach(x=>{const s=S.stats[x.id];if(s){seen++;if(s.last)ok++}});return{n:items.length,seen,ok}}
+const failed=()=>Object.keys(S.stats).filter(k=>byId[k]&&!S.stats[k].last);
+
+function hl(code){return esc(code).replace(/\b(SELECT|FROM|WHERE|INNER JOIN|JOIN|ON|AS|CREATE|OR REPLACE|VIEW|TABLE|TRIGGER|PROCEDURE|BEFORE|AFTER|INSERT|UPDATE|DELETE|INTO|VALUES|FOR EACH ROW|BEGIN|END IF|END CASE|END WHILE|END|IF|ELSEIF|ELSE|THEN|SIGNAL|SQLSTATE|SET|MESSAGE_TEXT|DECLARE|DEFAULT|IN|OUT|INOUT|CASE|WHEN|WHILE|DO|CALL|GRANT|REVOKE|TO|ROLE|USER|IDENTIFIED BY|SHOW|GRANTS|INDEX|EXPLAIN|ALTER|ADD|DELIMITER|START TRANSACTION|COMMIT|ROLLBACK|EXIT HANDLER|SQLEXCEPTION|GROUP BY|ORDER BY|DESC|NOT|LIKE|AND|IF NOT EXISTS|PRIMARY KEY|AUTO_INCREMENT)\b/g,'<span class="kw">$1</span>')}
+
+/* ---------- Vistas ---------- */
+function home(){
+  run=null;
+  const f=failed().length;
+  app.innerHTML=`
+  <header class="top"><div class="brand">Parcial <span>BD</span></div></header>
+  <section class="hero"><h1>Practicá para el parcial</h1>
+   <p>${MC.length} preguntas de teoría y ${SQL.length} ejercicios de SQL sobre Sakila, armados con las clases de Seguridad, Vistas, Índices, SP, Triggers, Transacciones y Data Warehouse.</p></section>
+  <section class="sec"><div class="label">Temas</div><div class="topics">${Object.entries(TOPICS).map(([k,v])=>{const s=topicStats(k);const pct=s.n?Math.round(s.ok/s.n*100):0;return `<button class="chip" data-t="${k}" aria-pressed="${S.topics.includes(k)}"><b>${v}</b><small>${s.ok}/${s.n} dominadas</small><span class="mini"><i style="width:${pct}%"></i></span></button>`}).join("")}</div></section>
+  <section class="sec"><div class="label">Modo</div><div class="seg">${[["mix","Mixto"],["mc","Teoría"],["sql","Escribir SQL"]].map(([k,v])=>`<button data-m="${k}" aria-pressed="${S.mode===k}">${v}</button>`).join("")}</div></section>
+  <section class="sec"><div class="row"><button class="primary" id="go">Empezar 10 ejercicios</button></div>
+   <div class="row"><button class="secondary" id="rev" ${f?"":"disabled"}>Repasar errores (${f})</button><button class="secondary" id="reset">Reiniciar progreso</button></div>
+   <p class="note">El progreso queda guardado en este navegador. En los ejercicios de SQL el corrector revisa las piezas clave de tu consulta y después podés comparar con la solución modelo; no la ejecuta contra MySQL.</p></section>`;
+  app.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const t=b.dataset.t;S.topics=S.topics.includes(t)?S.topics.filter(x=>x!==t):[...S.topics,t];save();home()});
+  app.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{S.mode=b.dataset.m;save();home()});
+  document.getElementById("go").onclick=()=>{
+    let pool=ALL.filter(x=>S.topics.includes(x.t)&&(S.mode==="mix"||x.kind===S.mode));
+    if(!pool.length){alertBox("Elegí al menos un tema con ejercicios para este modo.");return}
+    start(shuffle(pool).slice(0,10));
+  };
+  document.getElementById("rev").onclick=()=>start(shuffle(failed().map(k=>byId[k])).slice(0,10));
+  const r=document.getElementById("reset");r.onclick=()=>{if(r.dataset.c){S.stats={};save();home()}else{r.dataset.c=1;r.textContent="Tocá de nuevo para confirmar"}};
+}
+function alertBox(msg){const p=document.createElement("p");p.className="note";p.style.color="var(--bad)";p.textContent=msg;document.getElementById("go").parentElement.after(p)}
+
+function start(items){run={items,i:0,res:[]};window.scrollTo(0,0);show()}
+function header(){const n=run.items.length;return `<header class="top"><div class="brand">Parcial <span>BD</span></div><button class="ghost" id="quit">Salir</button></header><div class="bar"><i style="width:${run.i/n*100}%"></i></div>
+ <div class="qhead"><span class="tag">${TOPICS[run.items[run.i].t]}</span><span class="note" style="font-variant-numeric:tabular-nums">${run.i+1} / ${n}</span></div>`}
+function record(id,ok){const s=S.stats[id]||{n:0,ok:0};s.n++;if(ok)s.ok++;s.last=ok;S.stats[id]=s;save();run.res.push({id,ok})}
+function show(){
+  if(run.i>=run.items.length)return result();
+  const it=run.items[run.i];
+  it.kind==="mc"?showMC(it):showSQL(it);
+  document.getElementById("quit").onclick=home;
+}
+function next(){run.i++;window.scrollTo(0,0);show()}
+
+function showMC(it){
+  const order=shuffle(it.o.map((t,i)=>({t,i})));
+  app.innerHTML=header()+`<h2 class="q">${it.q}</h2><div class="opts">${order.map((o,k)=>`<button class="opt" data-i="${o.i}"><span class="k">${"ABCD"[k]}</span><span>${o.t}</span></button>`).join("")}</div><div id="fb"></div>`;
+  app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    const ok=+b.dataset.i===it.a;
+    app.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.i===it.a)x.classList.add("ok")});
+    if(!ok)b.classList.add("bad");
+    record(it.id,ok);
+    document.getElementById("fb").innerHTML=`<div class="expl ${ok?"":"wrong"}"><strong>${ok?"Correcto.":"No es esa."}</strong>${it.e}</div><div class="actions"><button class="primary" id="nx">${run.i+1<run.items.length?"Siguiente":"Ver resultado"}</button></div>`;
+    document.getElementById("nx").onclick=next;
+    document.getElementById("nx").focus();
+  });
+}
+
+function norm(s){return s.replace(/[‘’´]/g,"'").replace(/[“”]/g,'"').replace(/`/g,"").replace(/--[^\n]*/g," ").replace(/\/\*[\s\S]*?\*\//g," ").toUpperCase().replace(/\s+/g," ").trim()}
+function showSQL(it){
+  const draftKey="d_"+it.id;let draft="";try{draft=sessionStorage.getItem(draftKey)||""}catch(e){}
+  app.innerHTML=header()+`<h2 class="q">${it.title}</h2><div class="task">${it.task}</div>
+  <div class="editor"><div class="prompt"><span>mysql&gt; sakila</span><span id="cnt">0 líneas</span></div>
+   <textarea id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Escribí tu consulta acá…" aria-label="Tu consulta SQL">${esc(draft)}</textarea>
+   <div class="keys" aria-label="Atajos de teclado SQL">${KEYS.map(k=>`<button type="button" data-k="${esc(k)}">${esc(k)}</button>`).join("")}</div></div>
+  <div class="actions"><button class="primary" id="chk">Corregir</button><button class="secondary" id="sol">Ver solución</button></div><div id="fb"></div>`;
+  const ed=document.getElementById("ed"),cnt=document.getElementById("cnt");
+  const upd=()=>{cnt.textContent=(ed.value?ed.value.split("\n").length:0)+" líneas";try{sessionStorage.setItem(draftKey,ed.value)}catch(e){}};upd();
+  ed.oninput=upd;
+  app.querySelectorAll("[data-k]").forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>{
+    const k=b.dataset.k;const sp=/^[;(),'=*@.]|^(NEW|OLD)\.$/.test(k)||k.endsWith(".")?"":" ";
+    const s=ed.selectionStart,e=ed.selectionEnd,v=ed.value;let ins=k+sp;
+    if(k==="SET MESSAGE_TEXT = ''"){ins=k;}
+    ed.value=v.slice(0,s)+ins+v.slice(e);let pos=s+ins.length;if(k==="SET MESSAGE_TEXT = ''")pos-=1;
+    ed.setSelectionRange(pos,pos);ed.focus();upd();}});
+  let done=false;
+  const finish=(ok)=>{if(done)return;done=true;record(it.id,ok)};
+  const showSol=()=>{if(document.getElementById("solb"))return;const d=document.createElement("div");d.id="solb";d.innerHTML=`<div class="label" style="margin-top:16px">Solución modelo</div><pre class="sol">${hl(it.sol)}</pre><div class="actions"><button class="primary" id="nx">${run.i+1<run.items.length?"Siguiente":"Ver resultado"}</button></div>`;document.getElementById("fb").appendChild(d);document.getElementById("nx").onclick=()=>{finish(false);next()}};
+  document.getElementById("chk").onclick=()=>{
+    const n=norm(ed.value);if(!n){ed.focus();return}
+    const res=it.checks.map(([re,msg])=>({ok:re.test(n),msg}));
+    const fb=(it.forbid||[]).filter(([re])=>re.test(n)).map(([,msg])=>({ok:false,msg}));
+    const all=[...res,...fb];const good=all.every(x=>x.ok);const p=res.filter(x=>x.ok).length;
+    document.getElementById("fb").innerHTML=`<div class="expl ${good?"":"wrong"}"><strong>${good?"Tiene todas las piezas clave.":"Faltan piezas"} · ${p}/${res.length}</strong>${good?"Compará igual con la solución por detalles de estilo.":"Revisá los puntos marcados y corregí. Podés volver a apretar Corregir."}</div><ul class="checks">${all.map(x=>`<li class="${x.ok?"p":"f"}"><span class="m">${x.ok?"✓":"✗"}</span><span>${esc(x.msg)}</span></li>`).join("")}</ul>`;
+    if(good){finish(true);showSol();document.getElementById("nx").onclick=next}
+  };
+  document.getElementById("sol").onclick=showSol;
+}
+
+function result(){
+  const ok=run.res.filter(r=>r.ok).length,n=run.res.length;
+  const nota=n?Math.round(ok/n*10):0;
+  app.innerHTML=`<header class="top"><div class="brand">Parcial <span>BD</span></div></header><div class="bar"><i style="width:100%"></i></div>
+  <section class="hero"><div class="label">Resultado</div><div class="score">${nota}<small> / 10</small></div><p>${ok} de ${n} bien. ${nota>=10?"Nivel promoción.":nota>=7?"Bien encaminado: repasá los que fallaste.":"Volvé sobre estos temas antes del parcial."}</p></section>
+  <section class="sec"><div class="label">Detalle</div><div class="list">${run.res.map(r=>{const it=byId[r.id];return `<div class="${r.ok?"p":"f"}"><span class="m">${r.ok?"✓":"✗"}</span><span>${TOPICS[it.t]}: ${it.kind==="sql"?esc(it.title):it.q.replace(/<[^>]+>/g,"")}</span></div>`}).join("")}</div></section>
+  <section class="sec"><div class="row"><button class="primary" id="again">Otra ronda</button><button class="secondary" id="back">Inicio</button></div></section>`;
+  document.getElementById("again").onclick=()=>{let pool=ALL.filter(x=>S.topics.includes(x.t)&&(S.mode==="mix"||x.kind===S.mode));start(shuffle(pool).slice(0,10))};
+  document.getElementById("back").onclick=home;
+}
+home();
+</script>
+
+</body>
+</html>
