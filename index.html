@@ -114,6 +114,11 @@ pre.sol .kw{color:var(--kw);font-weight:600}
 .list div{display:flex;gap:10px;font-size:14.5px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
 .list .m{font-weight:700;flex:none}
 .list .p .m{color:var(--ok)}.list .f .m{color:var(--bad)}
+details.tabs{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+details.tabs summary{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;cursor:pointer}
+.tb{display:grid;gap:2px;margin-top:10px;font-size:13.5px;color:var(--muted);min-width:0}
+.tb span{font-family:var(--f-mono);font-size:12.5px;overflow-wrap:anywhere}
+.tb .tn{color:var(--ink);font-weight:600;font-size:14px}
 /* teoría */
 .ttabs{position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:4;background:var(--bg);display:flex;gap:6px;overflow-x:auto;padding-block:4px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .ttabs::-webkit-scrollbar{display:none}
@@ -232,7 +237,7 @@ const SQL=[
  checks:[[R("CREATE (OR REPLACE )?VIEW V_CATALOGO_ACCION AS"),"CREATE VIEW v_catalogo_accion AS"],[R("FILM_CATEGORY"),"JOIN con film_category"],[R("JOIN (SAKILA\\.)?CATEGORY"),"JOIN con category"],[R("NAME ?= ?'ACTION'"),"WHERE c.name = 'Action'"],[R("TITLE"),"Incluye title"]],
  forbid:[[R("RENTAL_RATE"),"No debe mostrar rental_rate"],[R("REPLACEMENT_COST"),"No debe mostrar replacement_cost"],[R("SELECT \\*"),"No uses SELECT *"]],
  sol:"CREATE VIEW v_catalogo_accion AS\nSELECT f.film_id, f.title, f.description, f.release_year, f.rating\nFROM film f\nINNER JOIN film_category fc ON f.film_id = fc.film_id\nINNER JOIN category c ON fc.category_id = c.category_id\nWHERE c.name = 'Action';"},
-{id:"q6",t:"vis",title:"Agregar duración sin perder permisos",task:"<p>El gerente pide que <code>v_catalogo_accion</code> muestre también <code>length</code>. Modificala <b>sin perder los permisos</b> ya asignados.</p>",
+{id:"q6",t:"vis",title:"Agregar duración sin perder permisos",task:"<p>La vista <code>v_catalogo_accion</code> ya existe (abajo está su código actual) y tiene permisos asignados al equipo de atención al cliente.</p><p>El gerente pide que también muestre la duración de la película (<code>length</code>). Reescribila completa agregando esa columna, <b>sin perder los permisos</b>.</p>",
  checks:[[R("CREATE OR REPLACE VIEW V_CATALOGO_ACCION AS"),"CREATE OR REPLACE VIEW (no DROP + CREATE)"],[R("LENGTH"),"Incluye length"],[R("NAME ?= ?'ACTION'"),"Mantiene el filtro 'Action'"]],
  forbid:[[R("DROP VIEW"),"DROP VIEW pierde los permisos de la vista"]],
  sol:"CREATE OR REPLACE VIEW v_catalogo_accion AS\nSELECT f.film_id, f.title, f.description, f.release_year, f.rating, f.length\nFROM film f\nINNER JOIN film_category fc ON f.film_id = fc.film_id\nINNER JOIN category c ON fc.category_id = c.category_id\nWHERE c.name = 'Action';"},
@@ -289,6 +294,25 @@ const SQL=[
  checks:[[R("SUM ?\\( ?(\\w+\\.)?MONTO_TOTAL_VENTA ?\\)"),"SUM(monto_total_venta)"],[R("FROM HECHO_VENTAS"),"FROM hecho_ventas"],[R("JOIN DIM_PRODUCTO"),"Un solo JOIN con dim_producto"],[R("ON (\\w+\\.)?PRODUCTO_ID ?= ?(\\w+\\.)?PRODUCTO_ID"),"ON por producto_id"],[R("GROUP BY (\\w+\\.)?CATEGORIA"),"GROUP BY categoria"],[R("ORDER BY .*DESC"),"ORDER BY ... DESC"]],
  sol:"SELECT p.categoria, SUM(h.monto_total_venta) AS total_vendido\nFROM hecho_ventas h\nINNER JOIN dim_producto p ON h.producto_id = p.producto_id\nGROUP BY p.categoria\nORDER BY total_vendido DESC;\n-- En copo de nieve harían falta más JOINs (producto → subcategoría → categoría)."}
 ];
+
+/* Tablas que usa cada ejercicio (para que sea autocontenido) */
+const TABLAS={
+film:"film_id, title, description, release_year, language_id, rental_duration, rental_rate, length, replacement_cost, rating ('G','PG','PG-13','R','NC-17'), last_update",
+category:"category_id, name ('Action','Comedy',…), last_update",
+film_category:"film_id, category_id, last_update",
+customer:"customer_id, store_id, first_name, last_name, email, address_id, active (1/0), create_date, last_update",
+payment:"payment_id, customer_id, staff_id, rental_id, amount, payment_date, last_update",
+rental:"rental_id, rental_date, inventory_id, customer_id, return_date, staff_id, last_update",
+staff:"staff_id, first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update",
+sucursal:"nombre_sucursal, ciudad_sucursal, activos",
+prestamo:"numero_prestamo, nombre_sucursal, importe",
+historial_sucursal:"id, staff_id, tienda_origen, tienda_destino, fecha  (ya creada)",
+cuenta:"id, saldo",
+hecho_ventas:"producto_id, fecha_id, sucursal_id, cliente_id, cantidad_vendida, precio_unitario, monto_total_venta, monto_descuento",
+dim_producto:"producto_id, nombre, marca, categoria, proveedor"
+};
+const EX_TABLAS={q1:["sucursal"],q2:["prestamo"],q3:["payment"],q4:["staff"],q5:["film","film_category","category"],q6:["film","film_category","category"],q7:["film"],q8:["film"],q9:["customer"],q10:["payment"],q11:["customer"],q12:["rental"],q13:["staff"],q14:["customer"],q15:["film"],q16:["rental"],q17:["staff","historial_sucursal"],q18:["rental"],q19:["film"],q20:["customer"],q21:["payment","customer"],q22:["cuenta"],q23:["hecho_ventas","dim_producto"]};
+const EX_PREV={q6:"CREATE VIEW v_catalogo_accion AS\nSELECT f.film_id, f.title, f.description, f.release_year, f.rating\nFROM film f\nINNER JOIN film_category fc ON f.film_id = fc.film_id\nINNER JOIN category c ON fc.category_id = c.category_id\nWHERE c.name = 'Action';"};
 
 const KEYS=["SELECT","FROM","WHERE","JOIN","ON","AS",";","(",")","'","=","<=","<>","*",",","NEW.","OLD.","@","DELIMITER //","END //","DELIMITER ;","BEGIN","END;","IF","THEN","END IF;","SIGNAL SQLSTATE '45000'","SET MESSAGE_TEXT = ''","FOR EACH ROW","CREATE TRIGGER","BEFORE INSERT ON","AFTER UPDATE ON","CREATE PROCEDURE","DECLARE","IN","OUT","CREATE VIEW","GRANT","REVOKE","TO","START TRANSACTION;","COMMIT;","ROLLBACK;"];
 
@@ -521,7 +545,10 @@ function showMC(it){
 function norm(s){return s.replace(/[‘’´]/g,"'").replace(/[“”]/g,'"').replace(/`/g,"").replace(/--[^\n]*/g," ").replace(/\/\*[\s\S]*?\*\//g," ").toUpperCase().replace(/\s+/g," ").trim()}
 function showSQL(it){
   const draftKey="d_"+it.id;let draft="";try{draft=sessionStorage.getItem(draftKey)||""}catch(e){}
-  app.innerHTML=header()+`<h2 class="q">${it.title}</h2><div class="task">${it.task}</div>
+  const tabs=(EX_TABLAS[it.id]||[]).map(t=>`<div class="tb"><code class="tn">${t}</code><span>${esc(TABLAS[t])}</span></div>`).join("");
+  const prev=EX_PREV[it.id]?`<div class="label" style="margin-top:12px">Código actual</div><pre class="sol">${hl(EX_PREV[it.id])}</pre>`:"";
+  app.innerHTML=header()+`<h2 class="q">${it.title}</h2><div class="task">${it.task}</div>${prev}
+  ${tabs?`<details class="tabs" open><summary>Tablas que usás</summary>${tabs}</details>`:""}
   <div class="editor"><div class="prompt"><span>mysql&gt; sakila</span><span id="cnt">0 líneas</span></div>
    <textarea id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Escribí tu consulta acá…" aria-label="Tu consulta SQL">${esc(draft)}</textarea>
    <div class="keys" aria-label="Atajos de teclado SQL">${KEYS.map(k=>`<button type="button" data-k="${esc(k)}">${esc(k)}</button>`).join("")}</div></div>
